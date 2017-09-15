@@ -27,16 +27,10 @@ public class BSP30map
     public BSPModelLump modelLump;
     private EntityParser myParser;
 
-    public BSP30map(string filename)
+    public BSP30map(MemoryStream ms)
     {
 
-        if (File.Exists("Assets/Bsp/" + filename) == false)
-        {
-            Debug.LogError("Bsp not found");
-
-
-        }
-        BSPfile = new BinaryReader(File.Open("Assets/Bsp/" + filename, FileMode.Open));
+        BSPfile = new BinaryReader(ms);
         header = new BSPHeader(BSPfile);
         bspInfo = new BspInfo();
 
@@ -71,8 +65,6 @@ public class BSP30map
 
         Debug.Log("data end ");
         bspInfo.mapNum_clipnodes = header.directory[9].length / 8;
-
-
 
         ReadPVS();
 
@@ -284,10 +276,10 @@ public class BSP30map
 
     private void LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
     {
-        if (File.Exists("Assets/Wad/" + WadFileName))
+        if (File.Exists("Wad/" + WadFileName))
         {
             //read in wad header
-            BinaryReader wadStream = new BinaryReader(File.Open("Assets/Wad/" + WadFileName, FileMode.Open));
+            BinaryReader wadStream = new BinaryReader(File.Open("Wad/" + WadFileName, FileMode.Open));
             string wadType = new string(wadStream.ReadChars(4));
             if (wadType != "WAD3" && wadType != "WAD2")
             {

@@ -2,6 +2,8 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+
 public class GenerateMapVis : MonoBehaviour
 {
     public Texture2D missingtexture;//use the included missing.jpg
@@ -16,28 +18,29 @@ public class GenerateMapVis : MonoBehaviour
     private bool lockpvs = false;
     private int lastpvs = 0;
     public bool RenderAllFaces = false;
-    void Start()
+
+    public void Load(MemoryStream ms)
     {
-        map = new BSP30map(mapName);
+        map = new BSP30map(ms);
         if (map == null)
         {
             Debug.LogError("Problem Loading map!!!");
         }
-        if (player == null)
-        {
-            Debug.LogError("player is null, cant get transform");
-        }
+        //if (player == null)
+        //{
+        //    Debug.LogError("player is null, cant get transform");
+        //}
         GenerateVisArrays();
         GenerateVisObjects();
+
         transform.localScale = 0.03f * Vector3.one;
         foreach (var a in FindObjectsOfType<Renderer>())
             if (a.sharedMaterial && a.sharedMaterial.mainTexture && a.sharedMaterial.mainTexture.name != "sky")
                 a.gameObject.AddComponent<MeshCollider>();
             else
                 Destroy(a);
-        //LightmapSettings.lightmaps = lt2.ToArray();
-        StaticBatchingUtility.Combine(gameObject);
     }
+
     void Update2()
     {
         //model1tLeaf = WalkBSP (map.modelLump.models [1].node);
