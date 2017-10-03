@@ -1,7 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 
 public class GenerateMapVis : MonoBehaviour
@@ -308,25 +306,5 @@ public class GenerateMapVis : MonoBehaviour
         }
         faceObject.isStatic = true;
         return faceObject;
-    }
-}
-
-public class MyDictionary<TKey, TValue> : Dictionary<TKey, TValue>
-{
-    public Func<TValue> def;
-    public MyDictionary(Func<TValue> a)
-    {
-        def = a;
-    }
-    public new TValue this[TKey key]
-    {
-        get
-        {
-            TValue v;
-            if (TryGetValue(key, out v))
-                return v;
-            return base[key] = def();
-        }
-        set { base[key] = value; }
     }
 }
