@@ -27,16 +27,16 @@ public class GenerateMapVis : MonoBehaviour
         //if (player == null)
         //{
         //    Debug.LogError("player is null, cant get transform");
-        //}
+        //} 
         GenerateVisArrays();
         GenerateVisObjects();
 
         transform.localScale = 0.03f * Vector3.one;
-        foreach (var a in FindObjectsOfType<Renderer>())
-            if (a.sharedMaterial && a.sharedMaterial.mainTexture && a.sharedMaterial.mainTexture.name != "sky")
-                a.gameObject.AddComponent<MeshCollider>();
-            else
-                Destroy(a);
+        //foreach (var a in FindObjectsOfType<Renderer>()) //do
+        //    if (a.sharedMaterial && a.sharedMaterial.mainTexture && a.sharedMaterial.mainTexture.name != "sky")
+        //        a.gameObject.AddComponent<MeshCollider>();
+        //    else
+        //        Destroy(a);
     }
 
     void Update2()

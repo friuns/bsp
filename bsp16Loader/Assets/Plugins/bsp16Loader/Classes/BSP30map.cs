@@ -7,6 +7,17 @@ using System;
 
 public class BSP30map
 {
+    public class Debug
+    {
+        public static void Log(string text)
+        {
+
+        }
+        public static void LogError(string P0)
+        {
+            UnityEngine.Debug.Log(P0);
+        }
+    }
     private BspInfo bspInfo;
     private int NumTexLoadFromWad = 0; //holds amount of textures in external wads
     private BinaryReader BSPfile;
