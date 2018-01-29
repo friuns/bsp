@@ -21,22 +21,12 @@ public class GenerateMapVis : MonoBehaviour
     {
         map = new BSP30map(ms);
         if (map == null)
-        {
             Debug.LogError("Problem Loading map!!!");
-        }
-        //if (player == null)
-        //{
-        //    Debug.LogError("player is null, cant get transform");
-        //} 
         GenerateVisArrays();
         GenerateVisObjects();
-
         transform.localScale = 0.03f * Vector3.one;
-        //foreach (var a in FindObjectsOfType<Renderer>()) //do
-        //    if (a.sharedMaterial && a.sharedMaterial.mainTexture && a.sharedMaterial.mainTexture.name != "sky")
-        //        a.gameObject.AddComponent<MeshCollider>();
-        //    else
-        //        Destroy(a);
+        
+        RenderPVS(0);
     }
 
     void Update2()
@@ -67,12 +57,9 @@ public class GenerateMapVis : MonoBehaviour
     {
         //Debug.Log("Rendering PVS for Leaf: " + leaf.ToString());
         for (int i = 0; i < leafRoots.Length; i++)
-        {
             foreach (GameObject go in leafRoots[i])
-            {
                 go.GetComponent<Renderer>().enabled = false;
-            }
-        }
+
         if (leaf == 0)
         {
             for (int i = 0; i < leafRoots.Length; i++)
@@ -80,10 +67,15 @@ public class GenerateMapVis : MonoBehaviour
                 foreach (GameObject go in leafRoots[i])
                 {
                     go.GetComponent<Renderer>().enabled = true;
+
                     if (go.GetComponent<Renderer>().sharedMaterial.mainTexture.name == "sky")
-                    {
                         go.GetComponent<Renderer>().enabled = false;
+                    else
+                    {
+                        go.AddComponent<MeshCollider>();
+                        go.layer = Layer.Level;
                     }
+                    
                 }
             }
             return;
@@ -96,9 +88,7 @@ public class GenerateMapVis : MonoBehaviour
                 { //+1 because leaf 0 is bullshit, trust me
                     go.GetComponent<Renderer>().enabled = true;
                     if (go.GetComponent<Renderer>().sharedMaterial.mainTexture.name == "sky")
-                    {
                         go.GetComponent<Renderer>().enabled = false;
-                    }
                 }
             }
         }
@@ -214,7 +204,7 @@ public class GenerateMapVis : MonoBehaviour
             float fUMin = 100000.0f;
             float fUMax = -10000.0f;
             float fVMin = 100000.0f;
-            float fVMax = -10000.0f; 
+            float fVMax = -10000.0f;
             float pMipTexheight = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].height;
             float pMipTexwidth = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].width;
             for (int nEdge = 0; nEdge < verts.Length; nEdge++)
