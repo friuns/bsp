@@ -24,8 +24,11 @@ public class BSPMipTexture
     {
         return (int)(width * height);
     }
-	
-	//using bytes because read chars can move stream position depending on the text its reading
+    public override string ToString()
+    {
+        return name;
+    }
+    //using bytes because read chars can move stream position depending on the text its reading
 	//this removes  ascii control characters that mess up string tests when loading from wad
 
 

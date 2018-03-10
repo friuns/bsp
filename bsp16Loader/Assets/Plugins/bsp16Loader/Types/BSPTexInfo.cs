@@ -27,7 +27,7 @@ public class BSPTexInfo
 
     public override string ToString()
     {
-        return "Vec3T: " + vec3t.ToString() + " OffT: " + offt.ToString() + " Vec3S: " + vec3s.ToString() + " OffS: " + offs.ToString() + " Miptex: " + miptex.ToString() + " Flags: " + flags.ToString();
+        return "Vec3T: " + vec3t + " OffT: " + offt + " Vec3S: " + vec3s + " OffS: " + offs + " Miptex: " + miptex + " Flags: " + flags;
     }
 
     // Maybe should scale the offsets too?

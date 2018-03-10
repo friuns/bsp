@@ -14,4 +14,8 @@ public class TexInfoClass
 	{
 	
 	}
+    public override string ToString()
+    {
+        return TextureName;
+    }
 }

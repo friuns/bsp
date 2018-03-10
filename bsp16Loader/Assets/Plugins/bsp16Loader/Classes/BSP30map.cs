@@ -9,13 +9,19 @@ public class BSP30map
 {
     public class Debug
     {
+        public static bool debug = true;
         public static void Log(string text)
         {
-
+            if(debug)
+                UnityEngine.Debug.Log(text);
         }
         public static void LogError(string P0)
         {
-            UnityEngine.Debug.Log(P0);
+            if (debug)
+                UnityEngine.Debug.LogError(P0);
+            else
+                UnityEngine.Debug.Log(P0);
+
         }
     }
     private BspInfo bspInfo;
@@ -37,6 +43,7 @@ public class BSP30map
     public BSPNodeLump nodeLump;
     public BSPModelLump modelLump;
     private EntityParser myParser;
+    public string wad = "Assets/Plugins/bsp16Loader/Wad/";
 
     public BSP30map(MemoryStream ms)
     {
@@ -178,7 +185,7 @@ public class BSP30map
                 wadFileNames[i] = wadFileNames[i].Substring(wadFileNames[i].LastIndexOf("\\") + 1);//remove unwanted text
                 if (wadFileNames[i].Length > 3)
                 {
-                    Debug.Log(wadFileNames[i].ToString());
+                    Debug.Log(wadFileNames[i]);
                     LoadTextureFromWad(wadFileNames[i], texinfo);
                 }
             }
@@ -287,10 +294,11 @@ public class BSP30map
 
     private void LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
     {
-        if (File.Exists("Wad/" + WadFileName))
+
+        if (File.Exists(wad + WadFileName))
         {
             //read in wad header
-            BinaryReader wadStream = new BinaryReader(File.Open("Wad/" + WadFileName, FileMode.Open));
+            BinaryReader wadStream = new BinaryReader(File.Open(wad + WadFileName, FileMode.Open));
             string wadType = new string(wadStream.ReadChars(4));
             if (wadType != "WAD3" && wadType != "WAD2")
             {
@@ -320,8 +328,9 @@ public class BSP30map
                 {
 
 
-                    if (TexturesToLoad[j].TextureName == TexuresInWadFile[k].TextureName)
-                    {
+                    if (string.Equals(TexturesToLoad[j].TextureName, TexuresInWadFile[k].TextureName, StringComparison.OrdinalIgnoreCase))
+                        //if (TexturesToLoad[j].TextureName == TexuresInWadFile[k].TextureName)
+                        {
                         //we found a missing texture so load it
 
                         miptexLump[TexturesToLoad[j].IndexOfMipTex] = ReadInTexture(TexuresInWadFile[k].IndexOfMipTex, wadStream, WadFileName);
@@ -343,7 +352,6 @@ public class BSP30map
         {
             Debug.LogError("Error wad file " + WadFileName.ToString() + " not found");
         }
-
     }
 
     public BSPMipTexture ReadInTexture(long Texoffset, BinaryReader stream, string wadname)
@@ -365,8 +373,8 @@ public class BSP30map
 
         }
 
-
-        miptex.texture = new Texture2D(miptex.width, miptex.height);//set size of texture
+        //do remove
+        //miptex.texture = new Texture2D(miptex.width, miptex.height);//set size of texture 
                                                                     //color palette is 2 bytes after the end of mipmap[4]
 
         stream.BaseStream.Position = ((miptex.width * miptex.height / 64) + miptex.offset[3] + textureOffset + 2); //Move stream to start of  Palette.
@@ -420,7 +428,7 @@ public class BSP30map
 
             colour[currentPixel] = colourPalette[indexInToColourPalette];
         }
-        Texture2D newTexture2D = new Texture2D(width, height);
+        Texture2D newTexture2D = new Texture2D(width, height,TextureFormat.RGB24,false);
         newTexture2D.SetPixels(colour);
         newTexture2D.filterMode = FilterMode.Point;//point looks like doom
         newTexture2D.Apply();
