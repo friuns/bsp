@@ -1,31 +1,27 @@
-﻿using System;
-using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-
-public class BSPEdgeLump
+﻿namespace bsp
 {
-    public BSPEdge[] edges;
-    public int[] SURFEDGES;
-
-    public BSPEdgeLump()
+    public class BSPEdgeLump
     {
-    }
+        public BSPEdge[] edges;
+        public int[] SURFEDGES;
 
-    public void PrintInfo()
-    {
-        Debug.Log("Edges:\r\n");
-        foreach (BSPEdge edge in edges)
+        public BSPEdgeLump()
         {
-            Debug.Log(edge.ToString());
         }
 
-        Debug.Log("Ledges:\r\n");
-        foreach (short ledge in SURFEDGES)
+        public void PrintInfo()
         {
-            Debug.Log(ledge.ToString());
+            UnityEngine.Debug.Log("Edges:\r\n");
+            foreach (BSPEdge edge in edges)
+            {
+                UnityEngine.Debug.Log(edge.ToString());
+            }
+
+            UnityEngine.Debug.Log("Ledges:\r\n");
+            foreach (short ledge in SURFEDGES)
+            {
+                UnityEngine.Debug.Log(ledge.ToString());
+            }
         }
     }
 }

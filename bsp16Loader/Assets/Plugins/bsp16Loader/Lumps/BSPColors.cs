@@ -1,37 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using UnityEngine;
-using System.IO;
 
-public class BSPColors
+namespace bsp
 {
-    public Color32[] colors = new Color32[256];
-    private BinaryReader colorLump;
-    public Texture2D debugTex;
-
-    public BSPColors()
+    public class BSPColors
     {
-        colorLump = new BinaryReader(File.Open("Assets/Resources/id1/palette.lmp", FileMode.Open));
-        RipColors();
-        colorLump.BaseStream.Dispose();
-        //DebugTex();
-    }
+        public Color32[] colors = new Color32[256];
+        private BinaryReader colorLump;
+        public Texture2D debugTex;
 
-    private void RipColors()
-    {
-        for (int i = 0; i < 256; i++)
+        public BSPColors()
         {
-            colors[i] = new Color32(colorLump.ReadByte(), colorLump.ReadByte(), colorLump.ReadByte(), (byte)0.0f);
+            colorLump = new BinaryReader(File.Open("Assets/Resources/id1/palette.lmp", FileMode.Open));
+            RipColors();
+            colorLump.BaseStream.Dispose();
+            //DebugTex();
         }
-    }
 
-    private void DebugTex()
-    {
-        debugTex = new Texture2D(16, 16);
-        debugTex.SetPixels32(colors);
-        debugTex.Apply();
+        private void RipColors()
+        {
+            for (int i = 0; i < 256; i++)
+            {
+                colors[i] = new Color32(colorLump.ReadByte(), colorLump.ReadByte(), colorLump.ReadByte(), (byte)0.0f);
+            }
+        }
+
+        private void DebugTex()
+        {
+            debugTex = new Texture2D(16, 16);
+            debugTex.SetPixels32(colors);
+            debugTex.Apply();
+        }
     }
 }
 

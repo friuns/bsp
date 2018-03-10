@@ -1,55 +1,55 @@
 ﻿using System;
 using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-public class BSPTexInfo
+namespace bsp
 {
-    public Vector3 vec3s;
-    public Vector3 vec3t;
-    public float offs;
-    public float offt;
-    public UInt32 miptex;
-	public UInt32 flags;
-
-	public BSPTexInfo(Vector3 vs, float os, Vector3 vt, float ot, UInt32 miptex, UInt32 flags)
+    public class BSPTexInfo
     {
-        this.vec3s = vs;
-        this.vec3t = vt;
-        this.miptex = miptex;
-        this.flags = flags;
-        this.offs = os;
-        this.offt = ot;
+        public Vector3 vec3s;
+        public Vector3 vec3t;
+        public float offs;
+        public float offt;
+        public UInt32 miptex;
+        public UInt32 flags;
 
-        Swizzle();
-    }
+        public BSPTexInfo(Vector3 vs, float os, Vector3 vt, float ot, UInt32 miptex, UInt32 flags)
+        {
+            this.vec3s = vs;
+            this.vec3t = vt;
+            this.miptex = miptex;
+            this.flags = flags;
+            this.offs = os;
+            this.offt = ot;
 
-    public override string ToString()
-    {
-        return "Vec3T: " + vec3t + " OffT: " + offt + " Vec3S: " + vec3s + " OffS: " + offs + " Miptex: " + miptex + " Flags: " + flags;
-    }
+            Swizzle();
+        }
 
-    // Maybe should scale the offsets too?
-    private void Swizzle()
-    {
-        //vec3s.Scale(new Vector3(0.03f, 0.03f, 0.03f));
-        //vec3t.Scale(new Vector3(0.03f, 0.03f, 0.03f));
+        public override string ToString()
+        {
+            return "Vec3T: " + vec3t + " OffT: " + offt + " Vec3S: " + vec3s + " OffS: " + offs + " Miptex: " + miptex + " Flags: " + flags;
+        }
 
-        float tempx = -vec3s.x;
-        float tempy = vec3s.z;
-        float tempz = -vec3s.y;
+        // Maybe should scale the offsets too?
+        private void Swizzle()
+        {
+            //vec3s.Scale(new Vector3(0.03f, 0.03f, 0.03f));
+            //vec3t.Scale(new Vector3(0.03f, 0.03f, 0.03f));
 
-        vec3s = new Vector3(tempx, tempy, tempz);
+            float tempx = -vec3s.x;
+            float tempy = vec3s.z;
+            float tempz = -vec3s.y;
 
-        tempx = -vec3t.x;
-        tempy = vec3t.z;
-        tempz = -vec3t.y;
+            vec3s = new Vector3(tempx, tempy, tempz);
 
-        vec3t = new Vector3(tempx, tempy, tempz);
+            tempx = -vec3t.x;
+            tempy = vec3t.z;
+            tempz = -vec3t.y;
 
-      //  offs = offs * 0.03f;
-     //   offt = offt * 0.03f;
+            vec3t = new Vector3(tempx, tempy, tempz);
+
+            //  offs = offs * 0.03f;
+            //   offt = offt * 0.03f;
+        }
     }
 }
 

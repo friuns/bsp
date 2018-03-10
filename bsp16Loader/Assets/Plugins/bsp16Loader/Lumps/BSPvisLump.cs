@@ -1,45 +1,45 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-
-public class BSPvisLump
+﻿namespace bsp
 {
-    public byte[] compressedVIS;
-
-    public BSPvisLump()
+    public class BSPvisLump
     {
-    }
+        public byte[] compressedVIS;
 
-    public void SwizBits()
-    {
-        for (int i = 0; i < compressedVIS.Length; i++)
+        public BSPvisLump()
         {
-            compressedVIS[i] = reverseByte(compressedVIS[i]);
-        }
-    }
-
-    private byte reverseByte(byte val)
-    {
-        byte result = 0;
-
-        int counter = 8;
-        while (counter-- < 0)
-        {
-            result <<= 1;
-            result |= (byte)(val & 1);
-            val = (byte)(val >> 1);
         }
 
-        return result;
-    }
-
-    public void PrintInfo()
-    {
-        string blob = "";
-        foreach (byte bit in compressedVIS)
+        public void SwizBits()
         {
-            blob += bit.ToString() + " ";
+            for (int i = 0; i < compressedVIS.Length; i++)
+            {
+                compressedVIS[i] = reverseByte(compressedVIS[i]);
+            }
         }
-        Debug.Log("VisData: (" + compressedVIS.Length.ToString() + " bytes) " + blob);
+
+        private byte reverseByte(byte val)
+        {
+            byte result = 0;
+
+            int counter = 8;
+            while (counter-- < 0)
+            {
+                result <<= 1;
+                result |= (byte)(val & 1);
+                val = (byte)(val >> 1);
+            }
+
+            return result;
+        }
+
+        public void PrintInfo()
+        {
+            string blob = "";
+            foreach (byte bit in compressedVIS)
+            {
+                blob += bit.ToString() + " ";
+            }
+            UnityEngine.Debug.Log("VisData: (" + compressedVIS.Length.ToString() + " bytes) " + blob);
+        }
     }
 }
 

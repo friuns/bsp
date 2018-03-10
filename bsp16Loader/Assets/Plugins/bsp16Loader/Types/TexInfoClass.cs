@@ -1,21 +1,21 @@
-﻿using UnityEngine;
-using System.Collections;
-
-public class TexInfoClass
+﻿namespace bsp
 {
-	public int IndexOfMipTex;
-	public string TextureName;
-	public TexInfoClass(string name,int index)
-	{
-		TextureName=name;
-		IndexOfMipTex=index;
-	}
-	public TexInfoClass()
-	{
-	
-	}
-    public override string ToString()
+    public class TexInfoClass
     {
-        return TextureName;
+        public int IndexOfMipTex;
+        public string TextureName;
+        public TexInfoClass(string name,int index)
+        {
+            TextureName=name;
+            IndexOfMipTex=index;
+        }
+        public TexInfoClass()
+        {
+	
+        }
+        public override string ToString()
+        {
+            return TextureName;
+        }
     }
 }

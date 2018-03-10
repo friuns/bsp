@@ -1,19 +1,19 @@
-using System;
-using UnityEngine;
-
-	public class BSPNodeLump
-	{
-		public BSPNode[] nodes;
+namespace bsp
+{
+    public class BSPNodeLump
+    {
+        public BSPNode[] nodes;
 	
-		public BSPNodeLump ()
-		{
-		}
+        public BSPNodeLump ()
+        {
+        }
 
         public void PrintInfo(){
             foreach (BSPNode node in nodes)
             {
-                Debug.Log(node.ToString());
+                UnityEngine.Debug.Log(node.ToString());
             }
         }
-	}
+    }
+}
 

@@ -1,24 +1,20 @@
-﻿using System;
-using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-
-public class BSPFaceLump
+﻿namespace bsp
 {
-    public BSPFace[] faces;
-
-    public BSPFaceLump()
+    public class BSPFaceLump
     {
-    }
+        public BSPFace[] faces;
 
-    public void PrintInfo()
-    {
-        Debug.Log("Faces:\r\n");
-        foreach (BSPFace face in faces)
+        public BSPFaceLump()
         {
-            Debug.Log(face.ToString());
+        }
+
+        public void PrintInfo()
+        {
+            UnityEngine.Debug.Log("Faces:\r\n");
+            foreach (BSPFace face in faces)
+            {
+                UnityEngine.Debug.Log(face.ToString());
+            }
         }
     }
 }

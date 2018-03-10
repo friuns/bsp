@@ -1,10 +1,8 @@
-﻿using UnityEngine;
-using System.IO;
-using System;
+﻿using System;
 using System.Text;
+using UnityEngine;
 
-
-namespace CustomExtensions
+namespace bsp
 {
 	public static class CustomExtensions
 	{

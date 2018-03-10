@@ -1,29 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
-public class BSPLeafLump
+﻿namespace bsp
 {
-    public BSPLeaf[] leafs;
-    public int numLeafs;
-
-    public BSPLeafLump()
+    public class BSPLeafLump
     {
-    }
+        public BSPLeaf[] leafs;
+        public int numLeafs;
 
-    public void GetLeafInfo(int leaf)
-    {
-        Debug.Log("Leaf " + leaf.ToString() + " " + leafs[leaf].ToString());
-    }
-
-    public void PrintInfo()
-    {
-        Debug.Log("Leafs:\r\n");
-        foreach (BSPLeaf leaf in leafs)
+        public BSPLeafLump()
         {
-            Debug.Log(leaf.ToString());
+        }
+
+        public void GetLeafInfo(int leaf)
+        {
+            UnityEngine.Debug.Log("Leaf " + leaf.ToString() + " " + leafs[leaf].ToString());
+        }
+
+        public void PrintInfo()
+        {
+            UnityEngine.Debug.Log("Leafs:\r\n");
+            foreach (BSPLeaf leaf in leafs)
+            {
+                UnityEngine.Debug.Log(leaf.ToString());
+            }
         }
     }
 }

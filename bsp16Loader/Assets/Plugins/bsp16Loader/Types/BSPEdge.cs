@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-
+﻿namespace bsp
+{
     public class BSPEdge
     {
         public int vert1;
@@ -20,4 +16,5 @@ using System.Text;
             return "Vert1: " + vert1.ToString() + " Vert2: " + vert2.ToString() + "\r\n";
         }
     }
+}
 

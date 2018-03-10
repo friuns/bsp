@@ -1,23 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
-public class BSPMarkSurfaces
+﻿namespace bsp
 {
-    public int[] markSurfaces;
-
-    public BSPMarkSurfaces()
+    public class BSPMarkSurfaces
     {
-    }
+        public int[] markSurfaces;
 
-    public void PrintInfo()
-    {
-        Debug.Log("MarkSurfaces:\r\n");
-        foreach (int msurface in markSurfaces)
+        public BSPMarkSurfaces()
         {
-            Debug.Log(msurface.ToString());
+        }
+
+        public void PrintInfo()
+        {
+            UnityEngine.Debug.Log("MarkSurfaces:\r\n");
+            foreach (int msurface in markSurfaces)
+            {
+                UnityEngine.Debug.Log(msurface.ToString());
+            }
         }
     }
 }

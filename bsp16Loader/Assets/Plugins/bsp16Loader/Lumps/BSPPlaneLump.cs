@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
-public class BSPPlaneLump
+﻿namespace bsp
 {
-    public BSPPlane[] planes;
-
-    public BSPPlaneLump() { }
-
-    public void PrintInfo()
+    public class BSPPlaneLump
     {
-        foreach (BSPPlane plane in planes)
+        public BSPPlane[] planes;
+
+        public BSPPlaneLump() { }
+
+        public void PrintInfo()
         {
-            Debug.Log(plane.ToString());
+            foreach (BSPPlane plane in planes)
+            {
+                UnityEngine.Debug.Log(plane.ToString());
+            }
         }
     }
 }

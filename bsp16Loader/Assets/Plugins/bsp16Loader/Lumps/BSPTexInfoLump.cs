@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
-
-public class BSPTexInfoLump
+﻿namespace bsp
 {
-    public BSPTexInfo[] texinfo;
-
-    public BSPTexInfoLump()
+    public class BSPTexInfoLump
     {
-    }
+        public BSPTexInfo[] texinfo;
 
-    public void PrintInfo()
-    {
-        Debug.Log("TexInfos:\r\n");
-        foreach (BSPTexInfo tex in texinfo)
+        public BSPTexInfoLump()
         {
-            Debug.Log(tex.ToString());
+        }
+
+        public void PrintInfo()
+        {
+            UnityEngine.Debug.Log("TexInfos:\r\n");
+            foreach (BSPTexInfo tex in texinfo)
+            {
+                UnityEngine.Debug.Log(tex.ToString());
+            }
         }
     }
 }
