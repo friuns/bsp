@@ -166,7 +166,7 @@ namespace Sledge.Providers
                 && float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
                 && float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z))
             {
-                return new Vector3(x, y, z);
+                return new Vector3(-x, z, -y);
             }
             return defaultValue;
         }

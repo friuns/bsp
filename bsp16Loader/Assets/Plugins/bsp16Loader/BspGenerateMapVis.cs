@@ -25,11 +25,12 @@ namespace bsp
             mt = new MyDictionary<uint, Material>(() => new Material(mat));
             GenerateVisArrays();
             GenerateVisObjects();
-            transform.localScale = 0.03f * Vector3.one;
+            transform.localScale = scale * Vector3.one;
             RenderPVS(0);
             if (combine)
                 StaticBatchingUtility.Combine(gameObject);
         }
+        public const float scale = 0.03f;
         void Update2()
         {
             if (!lockpvs)

@@ -65,15 +65,13 @@ namespace bsp
             bspInfo.mapNum_clipnodes = header.directory[9].length / 8;
             ReadPVS();
             BSPfile.ReadBytes(3);
-            Debug.Log("Steam pos: " + BSPfile.BaseStream.Position);
-            var text = BSPfile.ReadNullTerminated();
-            Debug.Log("vtf file len: " + text.Length);
-            foreach (var item in VdfReader.Parse(text))
+            BSPfile.BaseStream.Dispose();
+
+            foreach (var item in VdfReader.Parse(entityLump.rawEntities))
             {
                 var key = item["classname"] ?? "null";
                 dict[key].Add(item);
             }
-            BSPfile.BaseStream.Dispose();
             if (NumTexLoadFromWad > 0)
             {
                 Debug.Log2("Reading in textures from wad");
@@ -240,9 +238,9 @@ namespace bsp
         }
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
         {
-            WWW w = null;
-            yield return bsWeb.DownloadCor2(wadUrl + WadFileName, a => w = a, cache: true);
-            using (BinaryReader wadStream = new BinaryReader(new MemoryStream(w.bytes)))
+            var w = new Web(wadUrl + WadFileName, cache: true);
+            yield return w;
+            using (BinaryReader wadStream = new BinaryReader(new MemoryStream(w.w.bytes)))
             {
                 string wadType = new string(wadStream.ReadChars(4));
                 if (wadType != "WAD3" && wadType != "WAD2")
