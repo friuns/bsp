@@ -158,7 +158,7 @@ namespace Sledge.Providers
         public Vector3 PropertyVector3(string name, Vector3 defaultValue = default(Vector3))
         {
             var prop = this[name];
-            if (defaultValue == null) defaultValue = Vector3.zero;
+
             if (prop == null || prop.Count(c => c == ' ') != 2) return defaultValue;
             var split = prop.Replace("[", "").Replace("]", "").Replace("(", "").Replace(")", "").Split(' ');
             float x, y, z;

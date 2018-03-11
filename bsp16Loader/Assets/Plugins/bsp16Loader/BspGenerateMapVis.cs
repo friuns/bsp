@@ -7,7 +7,7 @@ namespace bsp
 {
     public class BspGenerateMapVis : MonoBehaviour
     {
-        public Texture2D missingtexture;//use the included missing.jpg
+        public Texture2D missingtexture;
         public int currentLeaf;
         public int model1tLeaf;
         public bool renderlights = true;
@@ -19,24 +19,19 @@ namespace bsp
         private int lastpvs = 0;
         public bool RenderAllFaces = false;
         public bool combine = true;
-        public void Load(MemoryStream ms)
+        public void Load(BSP30Map map)
         {
+            this.map = map;
             mt = new MyDictionary<uint, Material>(() => new Material(mat));
-            map = new BSP30Map(ms);
-            if (map == null)
-                Debug.LogError("Problem Loading map!!!");
             GenerateVisArrays();
             GenerateVisObjects();
             transform.localScale = 0.03f * Vector3.one;
-
             RenderPVS(0);
             if (combine)
                 StaticBatchingUtility.Combine(gameObject);
         }
-
         void Update2()
         {
-            //model1tLeaf = WalkBSP (map.modelLump.models [1].node);
             if (!lockpvs)
             {
                 int pvs = WalkBSP();
@@ -47,25 +42,17 @@ namespace bsp
             }
             if (RenderAllFaces)
                 RenderPVS(0);
-            // Pressing A will toggle locking the PVS
             if (Input.GetKeyDown(KeyCode.Z))
             {
                 lockpvs = !lockpvs;
                 Debug.Log("PVS lock: " + lockpvs);
             }
-
-            //enabled = false;
         }
-        // This will retrieve and render the PVS for the leaf you pass it
-        // Must run every frame/however often you want to update the pvs.
-        // you can cease calling this to "lock" the pvs.
         private void RenderPVS(int leaf)
         {
-            //Debug.Log("Rendering PVS for Leaf: " + leaf.ToString());
             for (int i = 0; i < leafRoots.Length; i++)
                 foreach (GameObject go in leafRoots[i])
                     go.GetComponent<Renderer>().enabled = false;
-
             if (leaf == 0)
             {
                 for (int i = 0; i < leafRoots.Length; i++)
@@ -73,7 +60,6 @@ namespace bsp
                     foreach (GameObject go in leafRoots[i])
                     {
                         go.GetComponent<Renderer>().enabled = true;
-
                         if (go.GetComponent<Renderer>().sharedMaterial.mainTexture.name == "sky")
                             go.GetComponent<Renderer>().enabled = false;
                         else
@@ -81,7 +67,6 @@ namespace bsp
                             go.AddComponent<MeshCollider>();
                             go.layer = Layer.Level;
                         }
-
                     }
                 }
                 return;
@@ -91,7 +76,7 @@ namespace bsp
                 if (map.leafLump.leafs[leaf].pvs[j] == true)
                 {
                     foreach (GameObject go in leafRoots[j + 1])
-                    { //+1 because leaf 0 is bullshit, trust me
+                    {
                         go.GetComponent<Renderer>().enabled = true;
                         if (go.GetComponent<Renderer>().sharedMaterial.mainTexture.name == "sky")
                             go.GetComponent<Renderer>().enabled = false;
@@ -99,8 +84,6 @@ namespace bsp
                 }
             }
         }
-        #region BSP Lookup
-        // Tests a node's plane, and returns the child to be tested next, or the leaf the player is in.
         private int BSPlookup(int node)
         {
             int child;
@@ -114,9 +97,6 @@ namespace bsp
             }
             return child;
         }
-        // This uses the bsp lookup method to find the leaf
-        // the camera is in, and returns it.
-        // Calling this (just one time) will give you the leaf the player is in.
         private int WalkBSP(int headnode = 0)
         {
             int child = BSPlookup(headnode);
@@ -127,8 +107,6 @@ namespace bsp
             child = -(child + 1);
             return child;
         }
-        #endregion
-        #region Object array generation
         void GenerateVisArrays()
         {
             leafRoots = new GameObject[map.leafLump.numLeafs][];
@@ -148,20 +126,15 @@ namespace bsp
                 }
             }
         }
-        #endregion
         public Material mat;
         public bool useLightMaps;
-        MyDictionary<uint, Material> mt;
-        //MyDictionary<int, LightmapData> lt = new MyDictionary<int, LightmapData>(() => new LightmapData());
-        //List<LightmapData> lt2 = new List<LightmapData>();
-
+        public MyDictionary<uint, Material> mt;
         GameObject GenerateFaceObject(BSPFace face)
         {
             GameObject faceObject = new GameObject("BSPface " + faceCount.ToString());
             faceObject.transform.parent = gameObject.transform;
             Mesh faceMesh = new Mesh();
             faceMesh.name = "BSPmesh";
-            // grab our verts
             Vector3[] verts = new Vector3[face.numberEdges];
             int edgestep = (int)face.firstEdgeIndex;
             for (int i = 0; i < face.numberEdges; i++)
@@ -176,7 +149,6 @@ namespace bsp
                 }
                 edgestep++;
             }
-            // whip up tris
             int[] tris = new int[(face.numberEdges - 2) * 3];
             int tristep = 1;
             for (int i = 1; i < verts.Length - 1; i++)
@@ -186,7 +158,6 @@ namespace bsp
                 tris[tristep + 1] = i + 1;
                 tristep += 3;
             }
-            // whip up uvs
             float scales = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].width;
             float scalet = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].height;
             Vector2[] uvs = new Vector2[face.numberEdges];
@@ -201,13 +172,9 @@ namespace bsp
             faceObject.AddComponent<MeshFilter>();
             faceObject.GetComponent<MeshFilter>().mesh = faceMesh;
             faceObject.AddComponent<MeshRenderer>();
-            //////////mr.lightmapIndex = (int)face.lightmapOffset;
             if (face.texinfo_id >= 0 && renderlights && face.lightmapOffset < map.lightlump.Length)
             {
-
                 Material bspMaterial = useLightMaps ? new Material(mat) : mt[map.texinfoLump.texinfo[face.texinfo_id].miptex];
-                //bspMaterial.color = new Color(1,1,1,1);
-                //Vector3 v0, v1;
                 Vertex[] pVertexList = new Vertex[verts.Length];
                 float fUMin = 100000.0f;
                 float fUMax = -10000.0f;
@@ -217,9 +184,7 @@ namespace bsp
                 float pMipTexwidth = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].width;
                 for (int nEdge = 0; nEdge < verts.Length; nEdge++)
                 {
-                    // Add vertex information
                     Vertex vertex = new Vertex(verts[nEdge]);
-                    // Generate texture coordinates for face
                     vertex.u = verts[nEdge].x * map.texinfoLump.texinfo[face.texinfo_id].vec3s.x + verts[nEdge].y * map.texinfoLump.texinfo[face.texinfo_id].vec3s.y + verts[nEdge].z * map.texinfoLump.texinfo[face.texinfo_id].vec3s.z + map.texinfoLump.texinfo[face.texinfo_id].offs;
                     vertex.v = verts[nEdge].x * map.texinfoLump.texinfo[face.texinfo_id].vec3t.x + verts[nEdge].y * map.texinfoLump.texinfo[face.texinfo_id].vec3t.y + verts[nEdge].z * map.texinfoLump.texinfo[face.texinfo_id].vec3t.z + map.texinfoLump.texinfo[face.texinfo_id].offt;
                     vertex.u /= pMipTexwidth;
@@ -235,7 +200,6 @@ namespace bsp
                 int lightMapWidth = (int)(Mathf.Ceil((fUMax * pMipTexwidth) / 16.0f) - Mathf.Floor((fUMin * pMipTexwidth) / 16.0f) + 1.0f);
                 int lightMapHeight = (int)(Mathf.Ceil((fVMax * pMipTexheight) / 16.0f) - Mathf.Floor((fVMin * pMipTexheight) / 16.0f) + 1.0f);
                 float cZeroTolerance = 1e-06f;
-                // Update light-map vertex u, v coordinates.  These should range from [0.0 -> 1.0] over face.
                 float fUDel = (fUMax - fUMin);
                 if (fUDel > cZeroTolerance)
                     fUDel = 1.0f / fUDel;
@@ -251,13 +215,11 @@ namespace bsp
                     (pVertexList)[n].lu = ((pVertexList)[n].lu - fUMin) * fUDel;
                     (pVertexList)[n].lv = ((pVertexList)[n].lv - fVMin) * fVDel;
                 }
-                //    Debug.Log(lightMapWidth+" "+ lightMapHeight);
                 if (useLightMaps)
                 {
                     Texture2D lightTex = new Texture2D(lightMapWidth, lightMapHeight);
                     Color[] colourarray = new Color[lightMapWidth * lightMapHeight];
                     int tempCount = (int)face.lightmapOffset;
-
                     for (int k = 0; k < lightMapWidth * lightMapHeight; k++)
                     {
                         if (tempCount + 3 > map.lightlump.Length) break;
@@ -265,17 +227,11 @@ namespace bsp
                         tempCount += 3;
                     }
                     lightTex.SetPixels(colourarray);
-                    // lightTex.filterMode = FilterMode.Bilinear;
                     lightTex.wrapMode = TextureWrapMode.Clamp;
                     lightTex.Apply();
-                    //lt[(int)face.lightmapOffset].lightmapFar = lt[(int)face.lightmapOffset].lightmapNear =
-                    //var lt = new LightmapData();
-                    //lt.lightmapNear = lt.lightmapFar = lightTex;
-                    //lt2.Add(lt);
                     var lvs = new List<Vector2>(new Vector2[pVertexList.Length]);
                     for (int a = 0; a < pVertexList.Length; a++)
                         lvs[a] = new Vector2(pVertexList[a].lu, pVertexList[a].lv);
-                    //faceMesh.SetUVs(1, lvs);
                     faceMesh.SetUVs(1, lvs);
                     bspMaterial.SetTexture("_LightMap", lightTex);
                 }
@@ -288,7 +244,6 @@ namespace bsp
                     bspMaterial.mainTexture = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].texture;
                     bspMaterial.mainTexture.name = map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].name;
                 }
-
                 bspMaterial.mainTexture.filterMode = FilterMode.Bilinear;
                 faceObject.GetComponent<Renderer>().sharedMaterial = bspMaterial;
             }
@@ -296,7 +251,6 @@ namespace bsp
             {
                 if (map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].texture == null)
                 {
-                    //faceObject.renderer.material.mainTexture = missingtexture;
                     faceObject.GetComponent<Renderer>().sharedMaterial.mainTexture = missingtexture;
                     Debug.LogError(map.miptexLump[map.texinfoLump.texinfo[face.texinfo_id].miptex].name + "not loaded");
                 }

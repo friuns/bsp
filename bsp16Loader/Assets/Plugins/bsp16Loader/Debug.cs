@@ -2,7 +2,7 @@ namespace bsp
 {
     public class Debug
     {
-        public static bool debug = false;
+        public static bool debug = true;
         public static void Log2(object text)
         {
             if (debug)
@@ -11,7 +11,7 @@ namespace bsp
         public static void LogError(object P0)
         {
             //if (debug)
-            UnityEngine.Debug.LogError(P0);
+            UnityEngine.Debug.LogError(P0); 
             //else
             //    UnityEngine.Debug.Log(P0);
 
