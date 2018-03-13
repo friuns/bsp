@@ -7,17 +7,28 @@ namespace bsp
     public class BSPModel
     {
 
-        Vector3 nMins;// Defines bounding box
-        Vector3 nMaxs;   // Defines bounding box       
-        Vector3 vOrigin;                  // Coordinates to move the // coordinate system
+        public Vector3 nMins;// Defines bounding box
+        public Vector3 nMaxs;   // Defines bounding box       
+        
+        public Vector3 vOrigin;                  // Coordinates to move the // coordinate system
         public Int32[] nodes;// [0]index of first BSP node, [1]index of the first Clip node, [2]index of the second Clip node, [3]  usually zero
 
         public Int32 numLeafs;// number of BSP leaves
-        Int32 indexOfFirstFace,numberOfFaces;// Index and count into faces lump
+        public Int32 indexOfFirstFace,numberOfFaces;// Index and count into faces lump
 
 
+        public Vector3 pos
+        {
+            get
+            {
+                var bb = new Bounds(nMins, nMaxs);
+                var c = bb.center;
+                c.y = bb.max.y;
+                return c;
+                    
+            }
+        }
 
-    
 
 
         public int node { get { return nodes[0]; } }

@@ -8,10 +8,12 @@ using System.Reflection;
 using UnityEngine;
 using Rectangle = UnityEngine.Rect;
 using Box = UnityEngine.Bounds;
-namespace Sledge.Providers
+namespace bsp
 {
     public class VdfReader
     {
+        public string key;
+
         private class GenericStructureProperty
         {
             public string Key { get; set; }
@@ -87,7 +89,7 @@ namespace Sledge.Providers
         //}
         public int PropertyInteger(string name, int defaultValue = 0)
         {
-            var prop = this[name];
+            string prop = this[name].Trim('*');
             int d;
             if (int.TryParse(prop, NumberStyles.Integer, CultureInfo.InvariantCulture, out d))
             {
@@ -166,7 +168,7 @@ namespace Sledge.Providers
                 && float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
                 && float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z))
             {
-                return new Vector3(-x, z, -y);
+                return new Vector3(-x, z, -y) * BspGenerateMapVis.scale;
             }
             return defaultValue;
         }

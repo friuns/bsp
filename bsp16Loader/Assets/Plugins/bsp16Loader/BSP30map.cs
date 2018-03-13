@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Sledge.Providers;
 using UnityEngine;
 namespace bsp
 {
@@ -70,6 +69,7 @@ namespace bsp
             foreach (var item in VdfReader.Parse(entityLump.rawEntities))
             {
                 var key = item["classname"] ?? "null";
+                item.key = key;
                 dict[key].Add(item);
             }
             if (NumTexLoadFromWad > 0)
@@ -403,7 +403,7 @@ namespace bsp
             modelLump.models = new BSPModel[modelCount];
             for (int i = 0; i < modelCount; i++)
             {
-                modelLump.models[i] = new BSPModel(BSPfile.ReadVector3(), BSPfile.ReadVector3(), BSPfile.ReadVector3()
+                modelLump.models[i] = new BSPModel(BSPfile.ReadVector32(), BSPfile.ReadVector32(), BSPfile.ReadVector32()
                                          , BSPfile.ReadInt32Array(4), BSPfile.ReadInt32(), BSPfile.ReadInt32(), BSPfile.ReadInt32());
             }
         }

@@ -1,11 +1,12 @@
 ﻿using System;
+using UnityEngine;
 
 namespace bsp
 {
     public class BSPFace
     {
 
-
+        public GameObject gameObject;
 
 
         public UInt16 plane_id; // Plane the face is parallel to
