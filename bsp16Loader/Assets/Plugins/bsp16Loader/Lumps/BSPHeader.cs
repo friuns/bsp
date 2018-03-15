@@ -54,7 +54,7 @@ namespace bsp
 
             map.BaseStream.Position = 0;
             version = map.ReadInt32();
-            if (version != 30) UnityEngine.Debug.LogError("Bsp is wrong type "+version);
+            if (version != 30) throw new Exception("Bsp is wrong type "+version);
 
 
             for (int i = 0; i < 16; i++)

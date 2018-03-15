@@ -12,7 +12,6 @@ namespace bsp
 {
     public class VdfReader
     {
-        public string key;
 
         private class GenericStructureProperty
         {
@@ -486,7 +485,7 @@ namespace bsp
         #region Parser
         public static IEnumerable<VdfReader> Parse(string filePath)
         {
-            using (var reader = new StringReader(filePath))
+            using (var reader = new StringReader(filePath.TrimEnd('\0')))
             {
                 return Parse(reader).ToList();
             }
@@ -519,7 +518,7 @@ namespace bsp
                 do
                 {
                     line = CleanLine(reader.ReadLine());
-                } while (IsNullOrWhiteSpace(line));
+                } while (line != null && line.Trim() == "");
                 if (line != "{")
                 {
                     return gs;
@@ -551,11 +550,6 @@ namespace bsp
             gs.Properties.Add(new GenericStructureProperty(split[0], (split[1] ?? "").Replace('`', '"')));
         }
         #endregion
-        public static bool IsNullOrWhiteSpace(string value)
-        {
-            if (value == null) return true;
-            return string.IsNullOrEmpty(value.Trim());
-        }
     }
 
     public static class StringExtensions

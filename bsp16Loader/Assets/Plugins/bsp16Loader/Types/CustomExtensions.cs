@@ -56,7 +56,7 @@ namespace bsp
                     isTeminated = true;
                 }
             }
-            return new string(dirtyChars);
+            return new string(dirtyChars).TrimEnd('\0');
         }
 
 

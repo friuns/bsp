@@ -11,7 +11,7 @@ namespace bsp
         public static void LogError(object P0)
         {
             //if (debug)
-            UnityEngine.Debug.LogError(P0); 
+            UnityEngine.Debug.LogError(P0);
             //else
             //    UnityEngine.Debug.Log(P0);
 

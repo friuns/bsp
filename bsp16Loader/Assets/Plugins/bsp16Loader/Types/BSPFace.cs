@@ -6,7 +6,7 @@ namespace bsp
     public class BSPFace
     {
 
-        public GameObject gameObject;
+        public Transform transform;
 
 
         public UInt16 plane_id; // Plane the face is parallel to
@@ -57,7 +57,7 @@ namespace bsp
         }
         public override string ToString()
         {
-            return "EdgeListIndex: " + firstEdgeIndex.ToString() + " NumEdges: " + numberEdges.ToString() + " TexinfoIndex: " + texinfo_id.ToString() + "\r\n";
+            return "plane_id " + plane_id + " EdgeListIndex: " + firstEdgeIndex.ToString() + " NumEdges: " + numberEdges.ToString() + " TexinfoIndex: " + texinfo_id.ToString() + "\r\n";
         }
     }
 }

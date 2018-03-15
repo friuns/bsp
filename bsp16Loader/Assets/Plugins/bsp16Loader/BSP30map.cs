@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 namespace bsp
 {
@@ -66,19 +67,15 @@ namespace bsp
             BSPfile.ReadBytes(3);
             BSPfile.BaseStream.Dispose();
 
-            foreach (var item in VdfReader.Parse(entityLump.rawEntities))
-            {
-                var key = item["classname"] ?? "null";
-                item.key = key;
-                dict[key].Add(item);
-            }
+
+
             if (NumTexLoadFromWad > 0)
             {
                 Debug.Log2("Reading in textures from wad");
                 yield return findNullTextures();
             }
         }
-        public MyDictionary<string, List<VdfReader>> dict = new MyDictionary<string, List<VdfReader>>();
+
         private void ReadPVS()
         {
             for (int i = 1; i < leafLump.numLeafs; i++)
@@ -239,7 +236,8 @@ namespace bsp
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
         {
             var w = new Web(wadUrl + WadFileName, cache: true);
-            yield return w;
+            yield return Base.CustomCorontinue(w, error: null, Throw: false);
+            if (!string.IsNullOrEmpty(w.w.error)) { yield break; }
             using (BinaryReader wadStream = new BinaryReader(new MemoryStream(w.w.bytes)))
             {
                 string wadType = new string(wadStream.ReadChars(4));
@@ -284,47 +282,42 @@ namespace bsp
                 miptex.texture = null;
                 return miptex;
             }
-            stream.BaseStream.Position = ((miptex.width * miptex.height / 64) + miptex.offset[3] + textureOffset + 2);
-            byte[] colourArray = stream.ReadBytes(256 * 3);
-            stream.BaseStream.Position = (textureOffset + miptex.offset[0]);
-            int NumberOfPixels = miptex.height * miptex.width;
-            byte[] pixelArray = stream.ReadBytes(NumberOfPixels);
-            miptex.texture = MakeTexture2D(miptex.height, miptex.width, colourArray, pixelArray);
+            ReadTexture(miptex, textureOffset, stream);
+            //stream.BaseStream.Position = ((miptex.width * miptex.height / 64) + miptex.offset[3] + textureOffset + 2);
+            //byte[] colourArray = stream.ReadBytes(256 * 3);
+            //stream.BaseStream.Position = (textureOffset + miptex.offset[0]);
+            //int NumberOfPixels = miptex.height * miptex.width;
+            //byte[] pixelArray = stream.ReadBytes(NumberOfPixels);
+            //miptex.texture = MakeTexture2D(miptex.height, miptex.width, colourArray, pixelArray);
             return miptex;
         }
-        private Texture2D MakeTexture2D(int height, int width, byte[] colourArray, byte[] pixelArray)
-        {
-            if ((width * height) != pixelArray.Length || colourArray.Length != (256 * 3))
-            {
-                Debug.LogError("(Method MakeTexture2D) something wrong with array sizes");
-                return null;
-            }
-            Color[] colourPalette = new Color[256];
-            int indexOfcolourArray = 0;
-            for (int j = 0; j < colourPalette.Length; j++)
-            {
-                colourPalette[j] = new Color32(colourArray[indexOfcolourArray], colourArray[indexOfcolourArray + 1], colourArray[indexOfcolourArray + 2], 255);
-                indexOfcolourArray += 3;
-            }
-            int NumberOfPixels = height * width;
-            Color[] colour = new Color[NumberOfPixels];
-            int indexInToColourPalette;
-            for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
-            {
-                colour[currentPixel] = new Color();
-                indexInToColourPalette = pixelArray[currentPixel];
-                if (indexInToColourPalette < 0 || indexInToColourPalette > 255)
-                {
-                    Debug.LogError("something wrong here chap!!!");
-                }
-                colour[currentPixel] = colourPalette[indexInToColourPalette];
-            }
-            Texture2D newTexture2D = new Texture2D(width, height, TextureFormat.RGB24, false);
-            newTexture2D.SetPixels(colour);
-            newTexture2D.filterMode = FilterMode.Point;
-            newTexture2D.Apply();
-            return newTexture2D;
-        }
+        //private Texture2D MakeTexture2D(int height, int width, byte[] colourArray, byte[] pixelArray)
+        //{
+        //    if ((width * height) != pixelArray.Length || colourArray.Length != (256 * 3))
+        //    {
+        //        Debug.LogError("(Method MakeTexture2D) something wrong with array sizes");
+        //        return null;
+        //    }
+        //    Color[] colourPalette = new Color[256];
+        //    int indexOfcolourArray = 0;
+        //    for (int j = 0; j < colourPalette.Length; j++)
+        //    {
+        //        colourPalette[j] = new Color32(colourArray[indexOfcolourArray], colourArray[indexOfcolourArray + 1], colourArray[indexOfcolourArray + 2], 255);
+        //        indexOfcolourArray += 3;
+        //    }
+        //    int NumberOfPixels = height * width;
+        //    Color[] colour = new Color[NumberOfPixels];
+        //    for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
+        //    {
+        //        var i = pixelArray[currentPixel];
+        //        colour[currentPixel] = colourPalette[i];
+        //    }
+        //    Texture2D newTexture2D = new Texture2D(width, height, TextureFormat.RGB24, false);
+        //    newTexture2D.SetPixels(colour);
+        //    newTexture2D.filterMode = FilterMode.Point;
+        //    newTexture2D.Apply();
+        //    return newTexture2D;
+        //}
         private void ReadTextures()
         {
             BSPfile.BaseStream.Position = header.directory[2].offset;
@@ -340,40 +333,46 @@ namespace bsp
                 int textureOffset = BSPMIPTEXOFFSET[indexOfTex];
                 BSPfile.BaseStream.Position = textureOffset;
                 miptexLump[indexOfTex] = new BSPMipTexture(BSPfile.LoadCleanString(16), BSPfile.ReadUInt32(), BSPfile.ReadUInt32(), BSPfile.ReadUInt32Array(4));
-                if (miptexLump[indexOfTex].offset[0] == 0)
+                var mip = miptexLump[indexOfTex];
+                if (mip.offset[0] == 0)
                 {
                     NumTexLoadFromWad++;
-                    miptexLump[indexOfTex].texture = null;
+                    mip.texture = null;
                     continue;
                 }
-                Debug.Log2("starting to read in texture " + miptexLump[indexOfTex].name);
-                miptexLump[indexOfTex].texture = new Texture2D(miptexLump[indexOfTex].width, miptexLump[indexOfTex].height);
-                Debug.Log2((miptexLump[indexOfTex].width * miptexLump[indexOfTex].height / 64) + (miptexLump[indexOfTex].offset[3] + textureOffset + 2).ToString());
-                BSPfile.BaseStream.Position = ((miptexLump[indexOfTex].width * miptexLump[indexOfTex].height / 64) + miptexLump[indexOfTex].offset[3] + textureOffset + 2);
-                Color[] colourPalette = new Color[256];
-                for (int j = 0; j < 256; j++)
-                {
-                    colourPalette[j] = new Color32(BSPfile.ReadByte(), BSPfile.ReadByte(), BSPfile.ReadByte(), 0);
-                }
-                BSPfile.BaseStream.Position = (textureOffset + miptexLump[indexOfTex].offset[0]);
-                int NumberOfPixels = miptexLump[indexOfTex].height * miptexLump[indexOfTex].width;
-                Color[] colour = new Color[NumberOfPixels];
-                int indexInToColourPalette;
-                for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
-                {
-                    colour[currentPixel] = new Color();
-                    indexInToColourPalette = BSPfile.ReadByte();
-                    if (indexInToColourPalette < 0 || indexInToColourPalette > 255)
-                    {
-                        Debug.LogError("something wrong here chap!!!");
-                    }
-                    colour[currentPixel] = colourPalette[indexInToColourPalette];
-                }
-                miptexLump[indexOfTex].texture.SetPixels(colour);
-                miptexLump[indexOfTex].texture.filterMode = FilterMode.Bilinear;
-                miptexLump[indexOfTex].texture.Apply();
+                Debug.Log2("starting to read in texture " + mip.name);
+                //Debug.Log2((miptexLump[indexOfTex].width * miptexLump[indexOfTex].height / 64) + (miptexLump[indexOfTex].offset[3] + textureOffset + 2).ToString());
+                ReadTexture(mip, textureOffset, BSPfile);
             }
             Debug.Log2("finished reading textures");
+        }
+        private void ReadTexture(BSPMipTexture mip, long textureOffset, BinaryReader BinaryReader)
+        {
+            BinaryReader.BaseStream.Position = ((mip.width * mip.height / 64) + mip.offset[3] + textureOffset + 2);
+            Color[] colourPalette = new Color[256];
+            bool transparent = false;
+            for (int j = 0; j < 256; j++)
+            {
+                var c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
+                if (c.b == 255 && c.r == 0 && c.g == 0)
+                {
+                    c.a = 0;
+                    transparent = true;
+                }
+                colourPalette[j] = c;
+            }
+            BinaryReader.BaseStream.Position = (textureOffset + mip.offset[0]);
+            int NumberOfPixels = mip.height * mip.width;
+            Color[] colour = new Color[NumberOfPixels];
+            for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
+            {
+                var i = BinaryReader.ReadByte();
+                colour[currentPixel] = colourPalette[i];
+            }
+            mip.texture = new Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24, false);
+            mip.texture.SetPixels(colour);
+            mip.texture.filterMode = FilterMode.Point;
+            mip.texture.Apply();
         }
         private void ReadMarkSurfaces()
         {
