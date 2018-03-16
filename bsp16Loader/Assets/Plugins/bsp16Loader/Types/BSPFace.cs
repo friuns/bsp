@@ -8,7 +8,7 @@ namespace bsp
 
         public Transform transform;
 
-
+        public int faceId;
         public UInt16 plane_id; // Plane the face is parallel to
         public UInt16 side;     // Set if different normals orientation
         public UInt32 firstEdgeIndex; // Index of the first surfedge

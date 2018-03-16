@@ -7,73 +7,80 @@ using System.Linq;
 using UnityEditor;
 namespace bsp
 {
-    public class BspGenerateMapVis : MonoBehaviour
+    public struct RendererCache
+    {
+        public Renderer renderer;
+        public bool enabled;
+        public bool oldEnabled;
+    }
+    public class BspGenerateMapVis : BSP30Map
     {
         public Texture2D missingtexture;
         string[] hide = new string[] { "sky", "aaatrigger", "black" };
-        public int currentLeaf;
         public int model1tLeaf;
         public bool renderlights = true;
-        private BSP30Map map;
-        private int faceCount = 0;
-        private GameObject[][] leafRoots;
-
-        public Transform player;
-        private bool lockpvs = false;
-        private int lastpvs = 0;
+        private BSP30Map map { get { return this; } }
+        //private int faceCount = 0;
+        private RendererCache[][] leafRoots;
+        public Transform debugTransform;
+        public static Vector3 pos;
+        private int oldPvs = 0;
         public bool RenderAllFaces = false;
-        public bool combine = true;
 
-        public void Load(BSP30Map map)
+        public bool combine = true;
+        public override IEnumerator Load(MemoryStream ms)
         {
-            this.map = map;
+            yield return base.Load(ms);
             GenerateVisArrays();
             GenerateVisObjects();
             transform.localScale = scale * Vector3.one;
             RenderPVS(0);
             if (combine)
                 StaticBatchingUtility.Combine(gameObject);
+            loaded = true;
+
         }
+        bool loaded;
         public const float scale = 0.03f;
-        void Update2()
+        public void Update()
         {
-            if (!lockpvs)
+            if (!loaded) return;
+            if (debugTransform)
             {
-                int pvs = WalkBSP();
-                if (pvs != lastpvs)
-                    currentLeaf = pvs;
+                pos = debugTransform.position;
+                if (Input.GetKeyDown(KeyCode.Space))
+                    RenderAllFaces = !RenderAllFaces;
+            }
+            int pvs = RenderAllFaces ? 0 : WalkBSP();
+            if (pvs != oldPvs)
                 RenderPVS(pvs);
-                lastpvs = pvs;
-            }
-            if (RenderAllFaces)
-                RenderPVS(0);
-            if (Input.GetKeyDown(KeyCode.Z))
-            {
-                lockpvs = !lockpvs;
-                Debug.Log("PVS lock: " + lockpvs);
-            }
+            oldPvs = pvs;
+
         }
         private void RenderPVS(int leaf)
         {
             for (int i = 0; i < leafRoots.Length; i++)
-                foreach (GameObject go in leafRoots[i])
-                    go.GetComponent<Renderer>().enabled = false;
-            if (leaf == 0)
+                for (int j = 0; j < leafRoots[i].Length; j++)
+                    leafRoots[i][j].enabled = leaf == 0;
+
+            if (leaf != 0)
             {
-                for (int i = 0; i < leafRoots.Length; i++)
-                    foreach (GameObject go in leafRoots[i])
-                        go.GetComponent<Renderer>().enabled = true;
-                return;
+                for (int j = 0; j < leafs[leaf].pvs.Length; j++)
+                    if (leafs[leaf].pvs[j])
+                        for (int i = 0; i < leafRoots[j + 1].Length; i++)
+                            leafRoots[j + 1][i].enabled = true;
             }
-            for (int j = 0; j < map.leafLump.leafs[leaf].pvs.Length; j++)
-                if (map.leafLump.leafs[leaf].pvs[j] == true)
-                    foreach (GameObject go in leafRoots[j + 1])
-                        go.GetComponent<Renderer>().enabled = true;
+            for (int i = 0; i < leafRoots.Length; i++)
+                for (int j = 0; j < leafRoots[i].Length; j++)
+                    if (leafRoots[i][j].enabled != leafRoots[i][j].oldEnabled)
+                        leafRoots[i][j].oldEnabled = leafRoots[i][j].renderer.enabled = leafRoots[i][j].enabled;
         }
+        BSPLeaf[] leafs { get { return leafLump.leafs; } }
+
         private int BSPlookup(int node)
         {
-            var b = map.planeLump.planes[map.nodeLump.nodes[node].planeNum].plane.GetSide(player.position);
-            return map.nodeLump.nodes[node].children[b ? 1 : 0];
+            var b = planeLump.planes[nodeLump.nodes[node].planeNum].plane.GetSide(pos / scale);
+            return nodeLump.nodes[node].children[b ? 1 : 0];
         }
         private int WalkBSP(int headnode = 0)
         {
@@ -87,17 +94,21 @@ namespace bsp
         }
         void GenerateVisArrays()
         {
-            leafRoots = new GameObject[map.leafLump.numLeafs][];
-            for (int i = 0; i < map.leafLump.numLeafs; i++)
-                leafRoots[i] = new GameObject[map.leafLump.leafs[i].NumMarkSurfaces];
+            leafRoots = new RendererCache[leafLump.numLeafs][];
+            for (int i = 0; i < leafLump.numLeafs; i++)
+                leafRoots[i] = new RendererCache[leafs[i].NumMarkSurfaces];
         }
         void GenerateVisObjects()
         {
-            for (int i = 0; i < map.leafLump.numLeafs; i++)
-                for (int j = 0; j < map.leafLump.leafs[i].NumMarkSurfaces; j++)
+            for (int i = 0; i < leafLump.numLeafs; i++)
+                for (int j = 0; j < leafs[i].NumMarkSurfaces; j++)
                 {
-                    leafRoots[i][j] = GenerateFaceObject(map.facesLump.faces[map.markSurfacesLump.markSurfaces[map.leafLump.leafs[i].FirstMarkSurface + j]]);
-                    faceCount++;
+                    BSPFace f = facesLump.faces[markSurfacesLump.markSurfaces[leafs[i].FirstMarkSurface + j]];
+
+                    var r = GenerateFaceObject(f).GetComponent<Renderer>();
+                    leafRoots[i][j] = new RendererCache() { renderer = r };
+                    r.name += " i:" + i + " j:" + j;
+                    //faceCount++;
                 }
         }
         public Material mat;
@@ -107,7 +118,7 @@ namespace bsp
         {
 
 #if !console
-            GameObject faceObject =  new GameObject("BSPface " + faceCount.ToString());
+            GameObject faceObject = new GameObject("BSPface " + face.faceId);
             face.transform = faceObject.transform;
             faceObject.transform.parent = gameObject.transform;
             Mesh faceMesh = new Mesh();
@@ -116,9 +127,9 @@ namespace bsp
             int edgestep = (int)face.firstEdgeIndex;
             for (int i = 0; i < face.numberEdges; i++)
             {
-                var edge = map.edgeLump.edges[Mathf.Abs(map.edgeLump.SURFEDGES[edgestep])];
-                var vert = map.edgeLump.SURFEDGES[face.firstEdgeIndex + i] < 0 ? edge.vert1 : edge.vert2;
-                verts[i] = map.vertLump.ConvertScaleVertex(map.vertLump.verts[vert]);
+                var edge = edgeLump.edges[Mathf.Abs(edgeLump.SURFEDGES[edgestep])];
+                var vert = edgeLump.SURFEDGES[face.firstEdgeIndex + i] < 0 ? edge.vert1 : edge.vert2;
+                verts[i] = vertLump.ConvertScaleVertex(vertLump.verts[vert]);
                 edgestep++;
             }
             int[] tris = new int[(face.numberEdges - 2) * 3];
@@ -130,8 +141,8 @@ namespace bsp
                 tris[tristep + 1] = i + 1;
                 tristep += 3;
             }
-            var bspTexInfo = map.texinfoLump.texinfo[face.texinfo_id];
-            var bspMipTexture = map.miptexLump[bspTexInfo.miptex];
+            var bspTexInfo = texinfoLump.texinfo[face.texinfo_id];
+            var bspMipTexture = miptexLump[bspTexInfo.miptex];
 
 
             float scales = bspMipTexture.width;
@@ -148,7 +159,7 @@ namespace bsp
             var renderer = faceObject.AddComponent<MeshRenderer>();
 
 
-            if (face.texinfo_id >= 0 && renderlights && face.lightmapOffset < map.lightlump.Length)
+            if (face.texinfo_id >= 0 && renderlights && face.lightmapOffset < lightlump.Length)
             {
                 renderer.sharedMaterial = new Material(mat);
                 RenderLights(face, verts, faceMesh, renderer);
@@ -194,9 +205,9 @@ namespace bsp
             float fUMax = -10000.0f;
             float fVMin = 100000.0f;
             float fVMax = -10000.0f;
-            var bspTexInfo = map.texinfoLump.texinfo[face.texinfo_id];
-            float pMipTexheight = map.miptexLump[bspTexInfo.miptex].height;
-            float pMipTexwidth = map.miptexLump[bspTexInfo.miptex].width;
+            var bspTexInfo = texinfoLump.texinfo[face.texinfo_id];
+            float pMipTexheight = miptexLump[bspTexInfo.miptex].height;
+            float pMipTexwidth = miptexLump[bspTexInfo.miptex].width;
             for (int nEdge = 0; nEdge < verts.Length; nEdge++)
             {
                 Vertex vertex = new Vertex(verts[nEdge]);
@@ -236,8 +247,8 @@ namespace bsp
             int tempCount = (int)face.lightmapOffset;
             for (int k = 0; k < lightMapWidth * lightMapHeight; k++)
             {
-                if (tempCount + 3 > map.lightlump.Length) break;
-                colourarray[k] = new Color32(map.lightlump[tempCount], map.lightlump[tempCount + 1], map.lightlump[tempCount + 2], 100);
+                if (tempCount + 3 > lightlump.Length) break;
+                colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
                 tempCount += 3;
             }
             lightTex.SetPixels(colourarray);
@@ -249,14 +260,14 @@ namespace bsp
             faceMesh.SetUVs(1, lvs);
             bspMaterial.SetTexture("_LightMap", lightTex);
 
-            if (map.miptexLump[bspTexInfo.miptex].texture == null)
+            if (miptexLump[bspTexInfo.miptex].texture == null)
             {
                 bspMaterial.mainTexture = missingtexture;
             }
             else
             {
-                bspMaterial.mainTexture = map.miptexLump[bspTexInfo.miptex].texture;
-                bspMaterial.mainTexture.name = map.miptexLump[bspTexInfo.miptex].name;
+                bspMaterial.mainTexture = miptexLump[bspTexInfo.miptex].texture;
+                bspMaterial.mainTexture.name = miptexLump[bspTexInfo.miptex].name;
             }
             bspMaterial.mainTexture.filterMode = FilterMode.Bilinear;
             faceObjectRenderer.sharedMaterial = bspMaterial;

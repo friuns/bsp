@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 namespace bsp
 {
-    public class BSP30Map
+    public class BSP30Map:MonoBehaviour
     {
         private BspInfo bspInfo;
         private int NumTexLoadFromWad;
@@ -27,9 +27,9 @@ namespace bsp
         public BSPNodeLump nodeLump;
         public BSPModelLump modelLump;
         private EntityParser myParser;
-        public static string wadUrl = bsWeb.mainSite + "wad/";
+        public string wadUrl { get { return bsWeb.mainSite + "wad/"; } }
 
-        public IEnumerator Load(MemoryStream ms)
+        public virtual IEnumerator Load(MemoryStream ms)
         {
             BSPfile = new BinaryReader(ms);
             header = new BSPHeader(BSPfile);
@@ -85,12 +85,8 @@ namespace bsp
                 int offset = leafLump.leafs[i].VisOffset;
                 if (offset == -1)
                     continue;
-                for (int j = 0; j < Mathf.FloorToInt((modelLump.models[0].numLeafs + 7f) / 8);)
+                for (int j = 0; j < Mathf.FloorToInt((modelLump.models[0].numLeafs + 7f) / 8f);)
                 {
-                    if (offset > visLump.compressedVIS.Length)
-                    {
-                        Debug.Log2("somthing wrong here");
-                    }
                     if (visLump.compressedVIS[offset] != 0)
                     {
                         pvs.Add(visLump.compressedVIS[offset++]);
@@ -218,7 +214,7 @@ namespace bsp
             for (int i = 0; i < numFaces; i++)
             {
                 facesLump.faces[i] = new BSPFace(BSPfile.ReadUInt16(), BSPfile.ReadUInt16(), BSPfile.ReadUInt32(), BSPfile.ReadUInt16(), BSPfile.ReadUInt16(),
-                                  BSPfile.ReadBytes(4), BSPfile.ReadUInt32(), header.directory[8].length);
+                                  BSPfile.ReadBytes(4), BSPfile.ReadUInt32(), header.directory[8].length) {faceId = i};
             }
             Debug.Log2("faces read");
         }
