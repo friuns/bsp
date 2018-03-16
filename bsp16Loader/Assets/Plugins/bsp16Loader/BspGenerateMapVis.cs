@@ -21,7 +21,7 @@ namespace bsp
         public bool renderlights = true;
         private BSP30Map map { get { return this; } }
         //private int faceCount = 0;
-        private RendererCache[][] leafRoots;
+        //private RendererCache[][] leafRoots;
         public Transform debugTransform;
         public static Vector3 pos;
         private int oldPvs = 0;
@@ -31,7 +31,6 @@ namespace bsp
         public override IEnumerator Load(MemoryStream ms)
         {
             yield return base.Load(ms);
-            GenerateVisArrays();
             GenerateVisObjects();
             transform.localScale = scale * Vector3.one;
             RenderPVS(0);
@@ -46,36 +45,40 @@ namespace bsp
         {
             if (!loaded) return;
             if (debugTransform)
-            {
                 pos = debugTransform.position;
-                if (Input.GetKeyDown(KeyCode.Space))
-                    RenderAllFaces = !RenderAllFaces;
-            }
+            if (Input.GetKeyDown(KeyCode.Return))
+                RenderAllFaces = !RenderAllFaces;
             int pvs = RenderAllFaces ? 0 : WalkBSP();
             if (pvs != oldPvs)
                 RenderPVS(pvs);
             oldPvs = pvs;
 
         }
-        private void RenderPVS(int leaf)
+        private void RenderPVS(int id)
         {
-            for (int i = 0; i < leafRoots.Length; i++)
-                for (int j = 0; j < leafRoots[i].Length; j++)
-                    leafRoots[i][j].enabled = leaf == 0;
+            foreach (var leaf in leafs)
+                for (int i = 0; i < leaf.renderers.Length; i++)
+                    leaf.renderers[i].enabled = id == 0;
 
-            if (leaf != 0)
+            if (id != 0)
             {
-                for (int j = 0; j < leafs[leaf].pvs.Length; j++)
-                    if (leafs[leaf].pvs[j])
-                        for (int i = 0; i < leafRoots[j + 1].Length; i++)
-                            leafRoots[j + 1][i].enabled = true;
+                BitArray bitArray = leafs[id].pvs;
+                for (int j = 0; j < bitArray.Length; j++)
+                    if (bitArray[j])
+                        AllTrue(leafs[j + 1].renderers);
             }
-            for (int i = 0; i < leafRoots.Length; i++)
-                for (int j = 0; j < leafRoots[i].Length; j++)
-                    if (leafRoots[i][j].enabled != leafRoots[i][j].oldEnabled)
-                        leafRoots[i][j].oldEnabled = leafRoots[i][j].renderer.enabled = leafRoots[i][j].enabled;
+
+            foreach (var leaf in leafs)
+                for (int i = 0; i < leaf.renderers.Length; i++)
+                    if (leaf.renderers[i].enabled != leaf.renderers[i].oldEnabled)
+                        leaf.renderers[i].oldEnabled = leaf.renderers[i].renderer.enabled = leaf.renderers[i].enabled;
+
         }
-        BSPLeaf[] leafs { get { return leafLump.leafs; } }
+        private static void AllTrue(RendererCache[] rendererCaches)
+        {
+            for (int i = 0; i < rendererCaches.Length; i++)
+                rendererCaches[i].enabled = true;
+        }
 
         private int BSPlookup(int node)
         {
@@ -92,24 +95,26 @@ namespace bsp
             child = -(child + 1);
             return child;
         }
-        void GenerateVisArrays()
-        {
-            leafRoots = new RendererCache[leafLump.numLeafs][];
-            for (int i = 0; i < leafLump.numLeafs; i++)
-                leafRoots[i] = new RendererCache[leafs[i].NumMarkSurfaces];
-        }
+
         void GenerateVisObjects()
         {
-            for (int i = 0; i < leafLump.numLeafs; i++)
-                for (int j = 0; j < leafs[i].NumMarkSurfaces; j++)
-                {
-                    BSPFace f = facesLump.faces[markSurfacesLump.markSurfaces[leafs[i].FirstMarkSurface + j]];
+            //leafRoots = new RendererCache[leafs.Length][];
+            //for (int i = 0; i < leafs.Length; i++)
+            //    leafRoots[i] = new RendererCache[leafs[i].NumMarkSurfaces];
 
+            foreach (var bspLeaf in leafs)
+            {
+                bspLeaf.renderers = new RendererCache[bspLeaf.NumMarkSurfaces];
+                for (int j = 0; j < bspLeaf.NumMarkSurfaces; j++)
+                {
+                    BSPFace f = facesLump.faces[markSurfacesLump.markSurfaces[bspLeaf.FirstMarkSurface + j]];
                     var r = GenerateFaceObject(f).GetComponent<Renderer>();
-                    leafRoots[i][j] = new RendererCache() { renderer = r };
-                    r.name += " i:" + i + " j:" + j;
+                    bspLeaf.renderers[j] = new RendererCache() { renderer = r };
+                    //r.name += " i:" + i + " j:" + j;
                     //faceCount++;
                 }
+            }
+
         }
         public Material mat;
         public Material matTrans;

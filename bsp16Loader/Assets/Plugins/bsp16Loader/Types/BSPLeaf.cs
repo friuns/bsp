@@ -6,6 +6,7 @@ namespace bsp
 {
     public class BSPLeaf
     {
+        public RendererCache[] renderers;
         public Int32 ContentsType;
         public Int32 VisOffset;
         public Vector3 mins;

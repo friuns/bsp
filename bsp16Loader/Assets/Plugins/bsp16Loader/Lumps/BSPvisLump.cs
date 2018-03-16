@@ -8,28 +8,28 @@
         {
         }
 
-        public void SwizBits()
-        {
-            for (int i = 0; i < compressedVIS.Length; i++)
-            {
-                compressedVIS[i] = reverseByte(compressedVIS[i]);
-            }
-        }
+        //public void SwizBits()
+        //{
+        //    for (int i = 0; i < compressedVIS.Length; i++)
+        //    {
+        //        compressedVIS[i] = reverseByte(compressedVIS[i]);
+        //    }
+        //}
 
-        private byte reverseByte(byte val)
-        {
-            byte result = 0;
+        //private byte reverseByte(byte val)
+        //{
+        //    byte result = 0;
 
-            int counter = 8;
-            while (counter-- < 0)
-            {
-                result <<= 1;
-                result |= (byte)(val & 1);
-                val = (byte)(val >> 1);
-            }
+        //    int counter = 8;
+        //    while (counter-- < 0)
+        //    {
+        //        result <<= 1;
+        //        result |= (byte)(val & 1);
+        //        val = (byte)(val >> 1);
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
 
         public void PrintInfo()
         {

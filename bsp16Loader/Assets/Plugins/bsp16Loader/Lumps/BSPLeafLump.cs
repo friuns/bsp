@@ -3,7 +3,6 @@
     public class BSPLeafLump
     {
         public BSPLeaf[] leafs;
-        public int numLeafs;
 
         public BSPLeafLump()
         {

@@ -8,9 +8,8 @@ namespace bsp
 {
     public class BSP30Map:MonoBehaviour
     {
-        private BspInfo bspInfo;
         private int NumTexLoadFromWad;
-        private BinaryReader BSPfile;
+        private BinaryReader br;
         public BSPHeader header;
         public BSPColors palette;
         public BSPEntityLump entityLump;
@@ -22,7 +21,7 @@ namespace bsp
         public BSPMipTexture[] miptexLump;
         public BSPMarkSurfaces markSurfacesLump;
         public BSPvisLump visLump;
-        public BSPLeafLump leafLump;
+        //public BSPLeafLump leafLump;
         public BSPPlaneLump planeLump;
         public BSPNodeLump nodeLump;
         public BSPModelLump modelLump;
@@ -31,10 +30,10 @@ namespace bsp
 
         public virtual IEnumerator Load(MemoryStream ms)
         {
-            BSPfile = new BinaryReader(ms);
-            header = new BSPHeader(BSPfile);
+            br = new BinaryReader(ms);
+            header = new BSPHeader(br);
             Debug.Log(header.PrintInfo());
-            bspInfo = new BspInfo();
+            new BspInfo();
             ReadEntities();
             ReadFaces();
             ReadEdges();
@@ -50,22 +49,20 @@ namespace bsp
             ReadVisData();
             Debug.Log2("data start ");
             Debug.Log2("Entity char length " + entityLump.rawEntities.Length);
-            Debug.Log2("number of Faces " + bspInfo.mapNum_faces);
-            Debug.Log2("lightmap length " + bspInfo.mapNum_lighting);
-            Debug.Log2("number of verts " + bspInfo.mapNum_verts);
-            Debug.Log2("number of Faces " + bspInfo.mapNum_faces);
-            Debug.Log2("textures " + bspInfo.mapNum_textures);
+            Debug.Log2("lightmap length " + lightlump.Length);
+            Debug.Log2("number of verts " + vertLump.verts.Length);
+            Debug.Log2("number of Faces " + facesLump.faces.Length);
+            Debug.Log2("textures " + texinfoLump.texinfo.Length);
             Debug.Log2("marksurf " + markSurfacesLump.markSurfaces.Length);
-            Debug.Log2("VisData Length: " + bspInfo.mapNum_visability);
-            Debug.Log2("leaf limp  Length: " + leafLump.numLeafs);
+            Debug.Log2("VisData Length: " + visLump.compressedVIS.Length);
+            Debug.Log2("leaf limp  Length: " + visLump.compressedVIS.Length);
             Debug.Log2("plane Length: " + planeLump.planes.Length);
             Debug.Log2("node lump Length: " + nodeLump.nodes.Length);
             Debug.Log2("models " + modelLump.models.Length);
             Debug.Log2("data end ");
-            bspInfo.mapNum_clipnodes = header.directory[9].length / 8;
+            Debug.Log2("clipNodes "+ header.directory[9].length / 8);
             ReadPVS();
-            BSPfile.ReadBytes(3);
-            BSPfile.BaseStream.Dispose();
+            br.BaseStream.Dispose();
 
 
 
@@ -78,11 +75,11 @@ namespace bsp
 
         private void ReadPVS()
         {
-            for (int i = 1; i < leafLump.numLeafs; i++)
+            for (int i = 1; i < leafs.Length; i++)
             {
                 int c;
                 List<byte> pvs = new List<byte>();
-                int offset = leafLump.leafs[i].VisOffset;
+                int offset = leafs[i].VisOffset;
                 if (offset == -1)
                     continue;
                 for (int j = 0; j < Mathf.FloorToInt((modelLump.models[0].numLeafs + 7f) / 8f);)
@@ -104,20 +101,19 @@ namespace bsp
                         }
                     }
                 }
-                leafLump.leafs[i].pvs = new BitArray(pvs.ToArray());
+                leafs[i].pvs = new BitArray(pvs.ToArray());
             }
         }
         private void ReadNodes()
         {
             nodeLump = new BSPNodeLump();
-            BSPfile.BaseStream.Position = header.directory[5].offset;
+            br.BaseStream.Position = header.directory[5].offset;
             int nodeCount = header.directory[5].length / BSPNode.Size;
-            bspInfo.mapNum_nodes = nodeCount;
             nodeLump.nodes = new BSPNode[nodeCount];
             for (int i = 0; i < nodeCount; i++)
             {
-                nodeLump.nodes[i] = new BSPNode(BSPfile.ReadUInt32(), BSPfile.ReadInt16(), BSPfile.ReadInt16(), BSPfile.ReadPoint3s(),
-                                    BSPfile.ReadPoint3s(), BSPfile.ReadUInt16(), BSPfile.ReadUInt16());
+                nodeLump.nodes[i] = new BSPNode(br.ReadUInt32(), br.ReadInt16(), br.ReadInt16(), br.ReadPoint3s(),
+                                    br.ReadPoint3s(), br.ReadUInt16(), br.ReadUInt16());
             }
         }
         public IEnumerator findNullTextures()
@@ -158,75 +154,70 @@ namespace bsp
         private void ReadPlanes()
         {
             planeLump = new BSPPlaneLump();
-            BSPfile.BaseStream.Position = header.directory[1].offset;
+            br.BaseStream.Position = header.directory[1].offset;
             int planeCount = header.directory[1].length / 20;
-            bspInfo.mapNum_planes = planeCount;
             planeLump.planes = new BSPPlane[planeCount];
             for (int i = 0; i < planeCount; i++)
             {
-                planeLump.planes[i] = new BSPPlane(BSPfile.ReadVector3(), BSPfile.ReadSingle(), BSPfile.ReadInt32());
+                planeLump.planes[i] = new BSPPlane(br.ReadVector3(), br.ReadSingle(), br.ReadInt32());
             }
         }
         private void ReadVerts()
         {
             vertLump = new BSPVertexLump();
-            BSPfile.BaseStream.Position = header.directory[3].offset;
+            br.BaseStream.Position = header.directory[3].offset;
             int numVerts = header.directory[3].length / 12;
-            bspInfo.mapNum_verts = numVerts;
             vertLump.verts = new Vector3[numVerts];
             for (int i = 0; i < numVerts; i++)
             {
-                vertLump.verts[i] = BSPfile.ReadVector3();
+                vertLump.verts[i] = br.ReadVector3();
             }
         }
         private void ReadEntities()
         {
-            BSPfile.BaseStream.Position = header.directory[0].offset;
-            entityLump = new BSPEntityLump(BSPfile.ReadChars(header.directory[0].length));
+            br.BaseStream.Position = header.directory[0].offset;
+            entityLump = new BSPEntityLump(br.ReadChars(header.directory[0].length));
         }
         private void ReadEdges()
         {
             edgeLump = new BSPEdgeLump();
-            BSPfile.BaseStream.Position = header.directory[12].offset;
+            br.BaseStream.Position = header.directory[12].offset;
             int numEdges = header.directory[12].length / 4;
-            bspInfo.mapNum_edges = numEdges;
             edgeLump.edges = new BSPEdge[numEdges];
             for (int i = 0; i < numEdges; i++)
             {
-                edgeLump.edges[i] = new BSPEdge(BSPfile.ReadUInt16(), BSPfile.ReadUInt16());
+                edgeLump.edges[i] = new BSPEdge(br.ReadUInt16(), br.ReadUInt16());
             }
             int numSURFEDGES = header.directory[13].length / 4;
-            BSPfile.BaseStream.Position = header.directory[13].offset;
-            bspInfo.mapNum_surfedges = numSURFEDGES;
+            br.BaseStream.Position = header.directory[13].offset;
             edgeLump.SURFEDGES = new int[numSURFEDGES];
             for (int i = 0; i < numSURFEDGES; i++)
             {
-                edgeLump.SURFEDGES[i] = BSPfile.ReadInt32();
+                edgeLump.SURFEDGES[i] = br.ReadInt32();
             }
         }
         private void ReadFaces()
         {
             facesLump = new BSPFaceLump();
-            BSPfile.BaseStream.Position = header.directory[7].offset;
+            br.BaseStream.Position = header.directory[7].offset;
             int numFaces = header.directory[7].length / 20;
-            bspInfo.mapNum_faces = numFaces;
             facesLump.faces = new BSPFace[numFaces];
             for (int i = 0; i < numFaces; i++)
             {
-                facesLump.faces[i] = new BSPFace(BSPfile.ReadUInt16(), BSPfile.ReadUInt16(), BSPfile.ReadUInt32(), BSPfile.ReadUInt16(), BSPfile.ReadUInt16(),
-                                  BSPfile.ReadBytes(4), BSPfile.ReadUInt32(), header.directory[8].length) {faceId = i};
+                facesLump.faces[i] = new BSPFace(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt32(), br.ReadUInt16(), br.ReadUInt16(),
+                                  br.ReadBytes(4), br.ReadUInt32(), header.directory[8].length) {faceId = i};
             }
             Debug.Log2("faces read");
         }
         private void ReadTexinfo()
         {
             texinfoLump = new BSPTexInfoLump();
-            BSPfile.BaseStream.Position = header.directory[6].offset;
+            br.BaseStream.Position = header.directory[6].offset;
             int numTexinfos = header.directory[6].length / 40;
             texinfoLump.texinfo = new BSPTexInfo[numTexinfos];
             for (int i = 0; i < numTexinfos; i++)
             {
-                texinfoLump.texinfo[i] = new BSPTexInfo(BSPfile.ReadVector3(), BSPfile.ReadSingle(), BSPfile.ReadVector3(), BSPfile.ReadSingle(), BSPfile.ReadUInt32(), BSPfile.ReadUInt32());
+                texinfoLump.texinfo[i] = new BSPTexInfo(br.ReadVector3(), br.ReadSingle(), br.ReadVector3(), br.ReadSingle(), br.ReadUInt32(), br.ReadUInt32());
             }
         }
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
@@ -316,19 +307,19 @@ namespace bsp
         //}
         private void ReadTextures()
         {
-            BSPfile.BaseStream.Position = header.directory[2].offset;
-            int numberOfTextures = (int)BSPfile.ReadUInt32();
+            br.BaseStream.Position = header.directory[2].offset;
+            int numberOfTextures = (int)br.ReadUInt32();
             miptexLump = new BSPMipTexture[numberOfTextures];
             Int32[] BSPMIPTEXOFFSET = new Int32[numberOfTextures];
             for (int i = 0; i < numberOfTextures; i++)
             {
-                BSPMIPTEXOFFSET[i] = (header.directory[2].offset + BSPfile.ReadInt32());
+                BSPMIPTEXOFFSET[i] = (header.directory[2].offset + br.ReadInt32());
             }
             for (int indexOfTex = 0; indexOfTex < numberOfTextures; indexOfTex++)
             {
                 int textureOffset = BSPMIPTEXOFFSET[indexOfTex];
-                BSPfile.BaseStream.Position = textureOffset;
-                miptexLump[indexOfTex] = new BSPMipTexture(BSPfile.LoadCleanString(16), BSPfile.ReadUInt32(), BSPfile.ReadUInt32(), BSPfile.ReadUInt32Array(4));
+                br.BaseStream.Position = textureOffset;
+                miptexLump[indexOfTex] = new BSPMipTexture(br.LoadCleanString(16), br.ReadUInt32(), br.ReadUInt32(), br.ReadUInt32Array(4));
                 var mip = miptexLump[indexOfTex];
                 if (mip.offset[0] == 0)
                 {
@@ -338,7 +329,7 @@ namespace bsp
                 }
                 Debug.Log2("starting to read in texture " + mip.name);
                 //Debug.Log2((miptexLump[indexOfTex].width * miptexLump[indexOfTex].height / 64) + (miptexLump[indexOfTex].offset[3] + textureOffset + 2).ToString());
-                ReadTexture(mip, textureOffset, BSPfile);
+                ReadTexture(mip, textureOffset, br);
             }
             Debug.Log2("finished reading textures");
         }
@@ -374,55 +365,47 @@ namespace bsp
         {
             markSurfacesLump = new BSPMarkSurfaces();
             int numMarkSurfaces = header.directory[11].length / 2;
-            bspInfo.mapNum_marksurfaces = numMarkSurfaces;
             markSurfacesLump.markSurfaces = new int[numMarkSurfaces];
-            BSPfile.BaseStream.Position = header.directory[11].offset;
+            br.BaseStream.Position = header.directory[11].offset;
             for (int i = 0; i < numMarkSurfaces; i++)
             {
-                markSurfacesLump.markSurfaces[i] = BSPfile.ReadUInt16();
+                markSurfacesLump.markSurfaces[i] = br.ReadUInt16();
             }
         }
         private void ReadVisData()
         {
-            bspInfo.mapNum_visability = header.directory[4].length;
             visLump = new BSPvisLump();
-            BSPfile.BaseStream.Position = header.directory[4].offset;
-            visLump.compressedVIS = BSPfile.ReadBytes(header.directory[4].length);
+            br.BaseStream.Position = header.directory[4].offset;
+            visLump.compressedVIS = br.ReadBytes(header.directory[4].length);
+            //visLump.SwizBits();
         }
         private void ReadModels()
         {
             modelLump = new BSPModelLump();
-            BSPfile.BaseStream.Position = header.directory[14].offset;
+            br.BaseStream.Position = header.directory[14].offset;
             int modelCount = header.directory[14].length / 64;
-            bspInfo.mapNum_models = modelCount;
             modelLump.models = new BSPModel[modelCount];
             for (int i = 0; i < modelCount; i++)
-            {
-                modelLump.models[i] = new BSPModel(BSPfile.ReadVector32(), BSPfile.ReadVector32(), BSPfile.ReadVector32()
-                                         , BSPfile.ReadInt32Array(4), BSPfile.ReadInt32(), BSPfile.ReadInt32(), BSPfile.ReadInt32());
-            }
+                modelLump.models[i] = new BSPModel(br.ReadVector32(), br.ReadVector32(), br.ReadVector32()
+                                         , br.ReadInt32Array(4), br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
         }
+        public BSPLeaf[] leafs;
         private void ReadLeafs()
         {
-            leafLump = new BSPLeafLump();
             int leafCount = header.directory[10].length / 28;
-            bspInfo.mapNum_leafs = leafCount;
-            leafLump.leafs = new BSPLeaf[leafCount];
-            leafLump.numLeafs = leafCount;
-            BSPfile.BaseStream.Position = header.directory[10].offset;
+
+            leafs = new BSPLeaf[leafCount];
+            br.BaseStream.Position = header.directory[10].offset;
             for (int i = 0; i < leafCount; i++)
-            {
-                leafLump.leafs[i] = new BSPLeaf(BSPfile.ReadInt32(), BSPfile.ReadInt32(), BSPfile.ReadBBoxshort(), BSPfile.ReadBBoxshort(),
-                                     BSPfile.ReadUInt16(), BSPfile.ReadUInt16(), BSPfile.ReadBytes(4));
-            }
+                leafs[i] = new BSPLeaf(br.ReadInt32(), br.ReadInt32(), br.ReadBBoxshort(), br.ReadBBoxshort(),
+                                     br.ReadUInt16(), br.ReadUInt16(), br.ReadBytes(4));
         }
         void ReadLightLump()
         {
-            bspInfo.mapNum_lighting = header.directory[8].length;
-            BSPfile.BaseStream.Position = header.directory[8].offset;
+            br.BaseStream.Position = header.directory[8].offset;
             if (header.directory[8].length == 0)
                 return;
-            lightlump = BSPfile.ReadBytes(header.directory[8].length);
+            lightlump = br.ReadBytes(header.directory[8].length);
         }
     }
 }
