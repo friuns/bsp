@@ -77,8 +77,8 @@ namespace bsp
 
         private int BSPlookup(int node)
         {
-            var b = planeLump.planes[nodeLump.nodes[node].planeNum].plane.GetSide(pos / scale);
-            return nodeLump.nodes[node].children[b ? 1 : 0];
+            var b = planesLump[nodesLump[node].planeNum].plane.GetSide(pos / scale);
+            return nodesLump[node].children[b ? 1 : 0];
         }
         private int WalkBSP(int headnode = 0)
         {
@@ -94,7 +94,7 @@ namespace bsp
         void GenerateVisObjects()
         {
             List<RendererCache> cull = new List<RendererCache>();
-            foreach (var face in faces)
+            foreach (var face in facesLump)
             {
                 var r = face.renderer = new RendererCache { renderer = GenerateFaceObject(face) };
                 if (face.leaf != null && face.leaf.used)
@@ -133,9 +133,9 @@ namespace bsp
             int edgestep = (int)face.firstEdgeIndex;
             for (int i = 0; i < face.numberEdges; i++)
             {
-                var edge = edgeLump.edges[Mathf.Abs(edgeLump.SURFEDGES[edgestep])];
-                var vert = edgeLump.SURFEDGES[face.firstEdgeIndex + i] < 0 ? edge.vert1 : edge.vert2;
-                verts[i] = vertLump.ConvertScaleVertex(vertLump.verts[vert]);
+                var edge = edgesLump[Mathf.Abs(SurfEdgesLump[edgestep])];
+                var vert = SurfEdgesLump[face.firstEdgeIndex + i] < 0 ? edge.vert1 : edge.vert2;
+                verts[i] = ext.ConvertScaleVertex(vertsLump[vert]);
                 edgestep++;
             }
             int[] tris = new int[(face.numberEdges - 2) * 3];
@@ -147,7 +147,7 @@ namespace bsp
                 tris[tristep + 1] = i + 1;
                 tristep += 3;
             }
-            var bspTexInfo = texinfoLump.texinfo[face.texinfo_id];
+            var bspTexInfo = texinfoLump[face.texinfo_id];
             var bspMipTexture = miptexLump[bspTexInfo.miptex];
 
 
@@ -207,7 +207,7 @@ namespace bsp
             float fUMax = -10000.0f;
             float fVMin = 100000.0f;
             float fVMax = -10000.0f;
-            var bspTexInfo = texinfoLump.texinfo[face.texinfo_id];
+            var bspTexInfo = texinfoLump[face.texinfo_id];
             float pMipTexheight = miptexLump[bspTexInfo.miptex].height;
             float pMipTexwidth = miptexLump[bspTexInfo.miptex].width;
             for (int nEdge = 0; nEdge < verts.Length; nEdge++)

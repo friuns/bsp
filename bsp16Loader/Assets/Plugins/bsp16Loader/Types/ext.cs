@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace bsp
 {
-    public static class CustomExtensions
+    public static class ext
     {
 
 
@@ -17,7 +17,12 @@ namespace bsp
         public static Vector3 ReadVector32(this BinaryReader BinRead)
         {
             var vert = ReadVector3(BinRead);
-            return new Vector3(-vert.x, vert.z, -vert.y) * BspGenerateMapVis.scale;
+
+            return ConvertScaleVertex(vert) * BspGenerateMapVis.scale;
+        }
+        public static Vector3 ConvertScaleVertex(Vector3 vert)
+        {
+            return new Vector3(-vert.x, vert.z, -vert.y);
         }
 
         public static Vector3 ReadVector3(this BinaryReader BinRead)
