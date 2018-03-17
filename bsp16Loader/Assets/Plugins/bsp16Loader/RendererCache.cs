@@ -2,7 +2,7 @@
 
 namespace bsp
 {
-    public struct RendererCache
+    public class RendererCache
     {
         public Renderer renderer;
         public bool enabled;

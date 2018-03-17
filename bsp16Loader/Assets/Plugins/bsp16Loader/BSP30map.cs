@@ -14,13 +14,14 @@ namespace bsp
         public BSPColors palette;
         public BSPEntityLump entityLump;
         public BSPFace[] faces;
+        public RendererCache[] renderers;
         public BSPEdgeLump edgeLump;
         public byte[] lightlump;
         public BSPVertexLump vertLump;
         public BSPTexInfoLump texinfoLump;
         public BSPMipTexture[] miptexLump;
-        public BSPMarkSurfaces markSurfacesLump;
         //public BSPLeafLump leafLump;
+        public int[] markSurfaces;
         public BSPPlaneLump planeLump;
         public BSPNodeLump nodeLump;
         public BSPModelLump modelLump;
@@ -52,7 +53,7 @@ namespace bsp
             Debug.Log2("number of verts " + vertLump.verts.Length);
             Debug.Log2("number of Faces " + faces.Length);
             Debug.Log2("textures " + texinfoLump.texinfo.Length);
-            Debug.Log2("marksurf " + markSurfacesLump.markSurfaces.Length);
+            Debug.Log2("marksurf " + markSurfaces.Length);
             Debug.Log2("plane Length: " + planeLump.planes.Length);
             Debug.Log2("node lump Length: " + nodeLump.nodes.Length);
             Debug.Log2("models " + modelLump.models.Length);
@@ -294,12 +295,11 @@ namespace bsp
         }
         private void ReadMarkSurfaces()
         {
-            markSurfacesLump = new BSPMarkSurfaces();
             int numMarkSurfaces = header.directory[11].length / 2;
-            markSurfacesLump.markSurfaces = new int[numMarkSurfaces];
+            markSurfaces = new int[numMarkSurfaces];
             br.BaseStream.Position = header.directory[11].offset;
             for (int i = 0; i < numMarkSurfaces; i++)
-                markSurfacesLump.markSurfaces[i] = br.ReadUInt16();
+                markSurfaces[i] = br.ReadUInt16();
         }
         private void ReadPvsVisData()
         {
@@ -338,21 +338,18 @@ namespace bsp
                 {
                     if (bits[j])
                     {
-                        Leaf item = leafs[j + 1];
-                        leaf.pvsList.Add(item);
-                        notUsed.Remove(item);
+                        Leaf childLeafs = leafs[j + 1];
+                        leaf.pvsList.Add(childLeafs);
+                        notUsed.Remove(childLeafs);
 
                     }
                 }
             }
-            var f = faces.ToList();
+      
+
             foreach (var leaf in notUsed)
-            {
                 leaf.used = false;
-                foreach (var a in leaf.renderers)
-                    f.Remove(a);
-            }
-            
+
 
         }
         private void ReadModels()
@@ -372,7 +369,19 @@ namespace bsp
             leafs = new Leaf[leafCount];
             br.BaseStream.Position = header.directory[10].offset;
             for (int i = 0; i < leafCount; i++)
-                leafs[i] = new Leaf(br.ReadInt32(), /*vislist */ br.ReadInt32(), br.ReadBBoxshort(), br.ReadBBoxshort(), br.ReadUInt16(), br.ReadUInt16(), br.ReadBytes(4));
+            {
+                var leaf = leafs[i] = new Leaf(br.ReadInt32(), /*vislist */ br.ReadInt32(), br.ReadBBoxshort(), br.ReadBBoxshort(), br.ReadUInt16(), br.ReadUInt16(), br.ReadBytes(4));
+
+                leaf.faces = new BSPFace[leaf.NumMarkSurfaces];
+                for (int j = 0; j < leaf.faces.Length; j++)
+                {
+                    BSPFace f = leaf.faces[j] = faces[markSurfaces[leaf.FirstMarkSurface + j]];
+                    f.leaf = leaf;
+                }
+            }
+
+            
+
         }
         void ReadLightLump()
         {

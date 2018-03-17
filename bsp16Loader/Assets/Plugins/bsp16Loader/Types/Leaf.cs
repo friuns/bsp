@@ -20,6 +20,7 @@ namespace bsp
         public List<Leaf> pvsList = new List<Leaf>();
         public RendererCache[] renderers;
         public int VisOffset;
+        public BSPFace[] faces = new BSPFace[0];
 
         public Leaf(int type, int vislist, Vector3 Mins, Vector3 Maxs, ushort lface_index, ushort num_lfaces, byte[] ambientLevels)
         {

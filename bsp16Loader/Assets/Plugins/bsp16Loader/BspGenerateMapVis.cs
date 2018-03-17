@@ -26,7 +26,7 @@ namespace bsp
             yield return base.Load(ms);
             GenerateVisObjects();
             transform.localScale = scale * Vector3.one;
-            RenderPVS(0);
+            UpdatePvs(0);
             if (combine)
                 StaticBatchingUtility.Combine(gameObject);
             loaded = true;
@@ -43,30 +43,31 @@ namespace bsp
                 RenderAllFaces = !RenderAllFaces;
             int pvs = RenderAllFaces ? 0 : WalkBSP();
             if (pvs != oldPvs)
-                RenderPVS(pvs);
+                UpdatePvs(pvs);
             oldPvs = pvs;
 
         }
-        private void RenderPVS(int id)
+        private void UpdatePvs(int id)
         {
-            if (id == 0) return;
-            foreach (var a in leafs)
-                for (int i = 0; i < a.renderers.Length; i++)                    
-                    a.renderers[i].enabled = id == 0;
+            //if (id == 0) return;
+
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].enabled = id == 0;
 
             if (id != 0)
-                foreach (var a in leafs[id].pvsList)
-                    AllTrue(a.renderers);
+                foreach (Leaf leaf in leafs[id].pvsList)
+                    AllTrue(leaf.renderers);
 
             RefreshRenderers();
 
         }
         private void RefreshRenderers()
         {
-            foreach (var a in leafs)
-                for (int i = 0; i < a.renderers.Length; i++)
-                    if (a.renderers[i].enabled != a.renderers[i].oldEnabled)
-                        a.renderers[i].oldEnabled = a.renderers[i].renderer.enabled = a.renderers[i].enabled;
+            //foreach (var a in leafs)
+            //    for (int i = 0; i < a.renderers.Length; i++)
+            for (int i = 0; i < renderers.Length; i++)
+                if (renderers[i].enabled != renderers[i].oldEnabled)
+                    renderers[i].oldEnabled = renderers[i].renderer.enabled = renderers[i].enabled;
         }
         private static void AllTrue(RendererCache[] rendererCaches)
         {
@@ -92,17 +93,25 @@ namespace bsp
 
         void GenerateVisObjects()
         {
+            List<RendererCache> cull = new List<RendererCache>();
+            foreach (var face in faces)
+            {
+                var r = face.renderer = new RendererCache { renderer = GenerateFaceObject(face) };
+                if (face.leaf != null && face.leaf.used)
+                {
+                    r.renderer.enabled = false;
+                    cull.Add(face.renderer);
+                }
+            }
+            renderers = cull.ToArray();
 
             foreach (Leaf leaf in leafs)
             {
                 leaf.renderers = new RendererCache[leaf.NumMarkSurfaces];
-                for (int j = 0; j < leaf.NumMarkSurfaces; j++)
+                for (int j = 0; j < leaf.faces.Length; j++)
                 {
-                    BSPFace f = faces[markSurfacesLump.markSurfaces[leaf.FirstMarkSurface + j]];
-                    var r = GenerateFaceObject(f);
-                    r.enabled = false;
-                    leaf.renderers[j] = new RendererCache { renderer = r };
-                    //r.name += " " + leaf.print();
+                    BSPFace f = leaf.faces[j];
+                    leaf.renderers[j] = f.renderer;
                 }
             }
 
@@ -115,7 +124,8 @@ namespace bsp
 
 #if !console
             GameObject faceObject = new GameObject("BSPface " + face.faceId);
-            
+            face.transform = faceObject.transform;
+
             faceObject.transform.parent = gameObject.transform;
             Mesh faceMesh = new Mesh();
             faceMesh.name = "BSPmesh";
@@ -152,7 +162,7 @@ namespace bsp
             faceMesh.RecalculateNormals();
             faceObject.AddComponent<MeshFilter>();
             faceObject.GetComponent<MeshFilter>().mesh = faceMesh;
-            var renderer = face.renderer = faceObject.AddComponent<MeshRenderer>();
+            var renderer = faceObject.AddComponent<MeshRenderer>();
 
             if (face.texinfo_id >= 0 && renderlights && face.lightmapOffset < lightlump.Length)
             {

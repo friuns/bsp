@@ -6,8 +6,6 @@ namespace bsp
     public class BSPFace
     {
 
-        public Renderer renderer;
-
         public int faceId;
         public UInt16 plane_id; // Plane the face is parallel to
         public UInt16 side;     // Set if different normals orientation
@@ -16,7 +14,9 @@ namespace bsp
         public UInt16 texinfo_id; // Index of the texture info structure
         public byte[] styles;   // Specify lighting styles
         public UInt32 lightmapOffset; // Offsets into the raw lightmap data
-
+        public Transform transform;
+        public RendererCache renderer;
+        public Leaf leaf;
 
 
         /// <summary>
