@@ -26,8 +26,8 @@ namespace bsp
         public BSPNode[] nodesLump;
         public BSPModel[] modelsLump;
         private EntityParser myParser;
-        public string wadUrl { get { return bsWeb.mainSite + "wad/"; } }
 
+        public Func<string, Action<MemoryStream>, IEnumerator> loadWad;
         public virtual IEnumerator Load(MemoryStream ms)
         {
             br = new BinaryReader(ms);
@@ -172,12 +172,14 @@ namespace bsp
             for (int i = 0; i < numTexinfos; i++)
                 texinfoLump[i] = new BSPTexInfo(br.ReadVector3(), br.ReadSingle(), br.ReadVector3(), br.ReadSingle(), br.ReadUInt32(), br.ReadUInt32());
         }
+
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
         {
-            var w = new Web(wadUrl + WadFileName, cache: true);
-            yield return Base.CustomCorontinue(w, error: null, Throw: false);
-            if (!string.IsNullOrEmpty(w.w.error)) { yield break; }
-            using (BinaryReader wadStream = new BinaryReader(new MemoryStream(w.w.bytes)))
+            MemoryStream ms = null;
+            yield return Base.CustomCorontinue(loadWad(WadFileName, a => ms = a), null, Throw: false);
+            if (ms == null) yield break;
+
+            using (BinaryReader wadStream = new BinaryReader(ms))
             {
                 string wadType = new string(wadStream.ReadChars(4));
                 if (wadType != "WAD3" && wadType != "WAD2")
@@ -378,6 +380,6 @@ namespace bsp
                 return;
             lightlump = br.ReadBytes(header.directory[8].length);
         }
-        
+
     }
 }
