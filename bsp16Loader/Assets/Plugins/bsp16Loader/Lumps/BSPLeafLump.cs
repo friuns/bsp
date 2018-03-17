@@ -2,7 +2,7 @@
 {
     public class BSPLeafLump
     {
-        public BSPLeaf[] leafs;
+        public Leaf[] leafs;
 
         public BSPLeafLump()
         {
@@ -16,7 +16,7 @@
         public void PrintInfo()
         {
             UnityEngine.Debug.Log("Leafs:\r\n");
-            foreach (BSPLeaf leaf in leafs)
+            foreach (Leaf leaf in leafs)
             {
                 UnityEngine.Debug.Log(leaf.ToString());
             }

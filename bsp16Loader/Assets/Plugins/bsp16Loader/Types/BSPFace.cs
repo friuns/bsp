@@ -6,7 +6,7 @@ namespace bsp
     public class BSPFace
     {
 
-        public Transform transform;
+        public Renderer renderer;
 
         public int faceId;
         public UInt16 plane_id; // Plane the face is parallel to
@@ -14,9 +14,9 @@ namespace bsp
         public UInt32 firstEdgeIndex; // Index of the first surfedge
         public UInt16 numberEdges; // Number of consecutive surfedges
         public UInt16 texinfo_id; // Index of the texture info structure
-        public byte[] Styles;   // Specify lighting styles
+        public byte[] styles;   // Specify lighting styles
         public UInt32 lightmapOffset; // Offsets into the raw lightmap data
-   
+
 
 
         /// <summary>
@@ -39,16 +39,16 @@ namespace bsp
         /// <param name="Styles">Specify lighting styles.</param>
         /// <param name="LightMapOffSet">Offsets into the raw lightmap data.</param>
 
-        public BSPFace(UInt16 PlaneID,UInt16 Side,UInt32 firstEdge,UInt16 NumberEdges,UInt16 texInfoID, byte[] Styles,UInt32 LightMapOffSet,int offset)
+        public BSPFace(UInt16 PlaneID, UInt16 Side, UInt32 firstEdge, UInt16 NumberEdges, UInt16 texInfoID, byte[] Styles, UInt32 LightMapOffSet, int offset)
         {
-            this.plane_id =PlaneID;
-            this.side = Side;
-            this.firstEdgeIndex=firstEdge;
-            this.numberEdges = NumberEdges;
-            this.texinfo_id = texInfoID;
-            this.Styles = Styles;
-            this.lightmapOffset=LightMapOffSet;
-            if(LightMapOffSet>offset) this.lightmapOffset=0;//CANT FIND WHY THIS IS
+            plane_id = PlaneID;
+            side = Side;
+            firstEdgeIndex = firstEdge;
+            numberEdges = NumberEdges;
+            texinfo_id = texInfoID;
+            styles = Styles;
+            lightmapOffset = LightMapOffSet;
+            if (LightMapOffSet > offset) lightmapOffset = 0;//CANT FIND WHY THIS IS
 
         }
         public BSPFace()
@@ -57,7 +57,7 @@ namespace bsp
         }
         public override string ToString()
         {
-            return "plane_id " + plane_id + " EdgeListIndex: " + firstEdgeIndex.ToString() + " NumEdges: " + numberEdges.ToString() + " TexinfoIndex: " + texinfo_id.ToString() + "\r\n";
+            return "plane_id " + plane_id + " EdgeListIndex: " + firstEdgeIndex + " NumEdges: " + numberEdges + " TexinfoIndex: " + texinfo_id + "\r\n";
         }
     }
 }

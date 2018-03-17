@@ -1,21 +1,20 @@
-﻿namespace bsp
-{
-    public class BSPFaceLump
-    {
-        public BSPFace[] faces;
+﻿//namespace bsp
+//{
+//    public class BSPFaceLump
+//    {
 
-        public BSPFaceLump()
-        {
-        }
+//        public BSPFaceLump()
+//        {
+//        }
 
-        public void PrintInfo()
-        {
-            UnityEngine.Debug.Log("Faces:\r\n");
-            foreach (BSPFace face in faces)
-            {
-                UnityEngine.Debug.Log(face.ToString());
-            }
-        }
-    }
-}
+//        public void PrintInfo()
+//        {
+//            UnityEngine.Debug.Log("Faces:\r\n");
+//            foreach (BSPFace face in faces)
+//            {
+//                UnityEngine.Debug.Log(face.ToString());
+//            }
+//        }
+//    }
+//}
 

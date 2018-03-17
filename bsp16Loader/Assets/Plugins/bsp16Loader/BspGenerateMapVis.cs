@@ -7,19 +7,12 @@ using System.Linq;
 using UnityEditor;
 namespace bsp
 {
-    public struct RendererCache
-    {
-        public Renderer renderer;
-        public bool enabled;
-        public bool oldEnabled;
-    }
     public class BspGenerateMapVis : BSP30Map
     {
         public Texture2D missingtexture;
         string[] hide = new string[] { "sky", "aaatrigger", "black" };
-        public int model1tLeaf;
         public bool renderlights = true;
-        private BSP30Map map { get { return this; } }
+        RendererCache[] allRenderers;
         //private int faceCount = 0;
         //private RendererCache[][] leafRoots;
         public Transform debugTransform;
@@ -56,23 +49,24 @@ namespace bsp
         }
         private void RenderPVS(int id)
         {
-            foreach (var leaf in leafs)
-                for (int i = 0; i < leaf.renderers.Length; i++)
-                    leaf.renderers[i].enabled = id == 0;
+            if (id == 0) return;
+            foreach (var a in leafs)
+                for (int i = 0; i < a.renderers.Length; i++)                    
+                    a.renderers[i].enabled = id == 0;
 
             if (id != 0)
-            {
-                BitArray bitArray = leafs[id].pvs;
-                for (int j = 0; j < bitArray.Length; j++)
-                    if (bitArray[j])
-                        AllTrue(leafs[j + 1].renderers);
-            }
+                foreach (var a in leafs[id].pvsList)
+                    AllTrue(a.renderers);
 
-            foreach (var leaf in leafs)
-                for (int i = 0; i < leaf.renderers.Length; i++)
-                    if (leaf.renderers[i].enabled != leaf.renderers[i].oldEnabled)
-                        leaf.renderers[i].oldEnabled = leaf.renderers[i].renderer.enabled = leaf.renderers[i].enabled;
+            RefreshRenderers();
 
+        }
+        private void RefreshRenderers()
+        {
+            foreach (var a in leafs)
+                for (int i = 0; i < a.renderers.Length; i++)
+                    if (a.renderers[i].enabled != a.renderers[i].oldEnabled)
+                        a.renderers[i].oldEnabled = a.renderers[i].renderer.enabled = a.renderers[i].enabled;
         }
         private static void AllTrue(RendererCache[] rendererCaches)
         {
@@ -98,20 +92,17 @@ namespace bsp
 
         void GenerateVisObjects()
         {
-            //leafRoots = new RendererCache[leafs.Length][];
-            //for (int i = 0; i < leafs.Length; i++)
-            //    leafRoots[i] = new RendererCache[leafs[i].NumMarkSurfaces];
 
-            foreach (var bspLeaf in leafs)
+            foreach (Leaf leaf in leafs)
             {
-                bspLeaf.renderers = new RendererCache[bspLeaf.NumMarkSurfaces];
-                for (int j = 0; j < bspLeaf.NumMarkSurfaces; j++)
+                leaf.renderers = new RendererCache[leaf.NumMarkSurfaces];
+                for (int j = 0; j < leaf.NumMarkSurfaces; j++)
                 {
-                    BSPFace f = facesLump.faces[markSurfacesLump.markSurfaces[bspLeaf.FirstMarkSurface + j]];
-                    var r = GenerateFaceObject(f).GetComponent<Renderer>();
-                    bspLeaf.renderers[j] = new RendererCache() { renderer = r };
-                    //r.name += " i:" + i + " j:" + j;
-                    //faceCount++;
+                    BSPFace f = faces[markSurfacesLump.markSurfaces[leaf.FirstMarkSurface + j]];
+                    var r = GenerateFaceObject(f);
+                    r.enabled = false;
+                    leaf.renderers[j] = new RendererCache { renderer = r };
+                    //r.name += " " + leaf.print();
                 }
             }
 
@@ -119,12 +110,12 @@ namespace bsp
         public Material mat;
         public Material matTrans;
         public Dictionary<uint, Material> mt = new Dictionary<uint, Material>();
-        GameObject GenerateFaceObject(BSPFace face)
+        Renderer GenerateFaceObject(BSPFace face)
         {
 
 #if !console
             GameObject faceObject = new GameObject("BSPface " + face.faceId);
-            face.transform = faceObject.transform;
+            
             faceObject.transform.parent = gameObject.transform;
             Mesh faceMesh = new Mesh();
             faceMesh.name = "BSPmesh";
@@ -161,8 +152,7 @@ namespace bsp
             faceMesh.RecalculateNormals();
             faceObject.AddComponent<MeshFilter>();
             faceObject.GetComponent<MeshFilter>().mesh = faceMesh;
-            var renderer = faceObject.AddComponent<MeshRenderer>();
-
+            var renderer = face.renderer = faceObject.AddComponent<MeshRenderer>();
 
             if (face.texinfo_id >= 0 && renderlights && face.lightmapOffset < lightlump.Length)
             {
@@ -182,11 +172,8 @@ namespace bsp
                 }
             }
 
-
-
             if (combine)
                 faceObject.isStatic = true;
-
 
             if (hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
                 faceObject.SetActive(false);
@@ -195,7 +182,7 @@ namespace bsp
                 faceObject.AddComponent<MeshCollider>();
                 faceObject.layer = Layer.Level;
             }
-            return faceObject;
+            return renderer;
 #else 
             return null;
 #endif
@@ -243,8 +230,8 @@ namespace bsp
                 fVDel = 1.0f;
             for (int n = 0; n < pVertexList.Length; n++)
             {
-                (pVertexList)[n].lu = ((pVertexList)[n].lu - fUMin) * fUDel;
-                (pVertexList)[n].lv = ((pVertexList)[n].lv - fVMin) * fVDel;
+                pVertexList[n].lu = (pVertexList[n].lu - fUMin) * fUDel;
+                pVertexList[n].lv = (pVertexList[n].lv - fVMin) * fVDel;
             }
 
             Texture2D lightTex = new Texture2D(lightMapWidth, lightMapHeight);
