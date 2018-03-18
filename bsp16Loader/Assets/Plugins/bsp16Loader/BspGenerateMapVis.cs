@@ -20,15 +20,13 @@ namespace bsp
         private int oldPvs = 0;
         public bool RenderAllFaces = false;
 
-        public bool combine = true;
         public override IEnumerator Load(MemoryStream ms)
         {
             yield return base.Load(ms);
             GenerateVisObjects();
             transform.localScale = scale * Vector3.one;
             UpdatePvs(0);
-            if (combine)
-                StaticBatchingUtility.Combine(gameObject);
+            
             loaded = true;
 
         }
@@ -182,7 +180,7 @@ namespace bsp
                 }
             }
 
-            if (combine)
+
                 faceObject.isStatic = true;
 
             if (hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
