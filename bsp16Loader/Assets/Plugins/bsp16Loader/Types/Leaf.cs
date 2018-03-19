@@ -10,17 +10,17 @@ namespace bsp
 {
     public class Leaf
     {
-        public bool used=true;
+        public bool used;
         public byte[] AmbientLevels;
         public int ContentsType;
         public int FirstMarkSurface;
         public Vector3 maxs;
         public Vector3 mins;
         public int NumMarkSurfaces;
-        public List<Leaf> pvsList = new List<Leaf>();
+        public List<Leaf> pvsList;
         public RendererCache[] renderers;
         public int VisOffset;
-        public BSPFace[] faces = new BSPFace[0];
+        public BSPFace[] faces;
 
         public Leaf(int type, int vislist, Vector3 Mins, Vector3 Maxs, ushort lface_index, ushort num_lfaces, byte[] ambientLevels)
         {
@@ -31,6 +31,10 @@ namespace bsp
             FirstMarkSurface = lface_index;
             NumMarkSurfaces = num_lfaces;
             AmbientLevels = ambientLevels;
+            //used = false;
+            //pvsList = new List<Leaf>();
+            //faces = new BSPFace[0];
+            //renderers = null;
         }
 
 

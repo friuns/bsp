@@ -6,12 +6,13 @@ using System.Linq;
 using UnityEngine;
 namespace bsp
 {
-    public class BSP30Map : MonoBehaviour
+    public class BSP30Map : Base
     {
+        internal bool disableTexturesAndColliders = false;
         private int NumTexLoadFromWad;
         private BinaryReader br;
         public BSPHeader header;
-        public string entityLump;
+        public EntityParser entityLump;
         public BSPFace[] facesLump;
         public RendererCache[] renderers;
         public BSPEdge[] edgesLump;
@@ -25,7 +26,6 @@ namespace bsp
         public BSPPlane[] planesLump;
         public BSPNode[] nodesLump;
         public BSPModel[] modelsLump;
-        private EntityParser myParser;
 
         public Func<string, Action<MemoryStream>, IEnumerator> loadWad;
         public virtual IEnumerator Load(MemoryStream ms)
@@ -33,26 +33,39 @@ namespace bsp
             br = new BinaryReader(ms);
             header = new BSPHeader(br);
             Debug.Log(header.PrintInfo());
-            new BspInfo();
-            ReadEntities();
-            ReadFaces();
-            ReadEdges();
-            ReadVerts();
-            ReadTexinfo();
-            ReadLightLump();
-            ReadTextures();
-            ReadMarkSurfaces();
-            ReadLeafs();
-            ReadPlanes();
-            ReadNodes();
-            ReadModels();
-            ReadPvsVisData();
-            Debug.Log2("data start ");
-            Debug.Log2("Entity char length " + entityLump.Length);
+            //new BspInfo();
+            using (Profile("ReadEntities"))
+                ReadEntities();
+            using (Profile("ReadFaces"))
+                ReadFaces();
+            using (Profile("ReadEdges"))
+                ReadEdges();
+            using (Profile("ReadVerts"))
+                ReadVerts();
+            using (Profile("ReadTexinfo"))
+                ReadTexinfo();
+            using (Profile("ReadLightLump"))
+                ReadLightLump();
+            using (Profile("Textures"))
+                ReadTextures();
+            using (Profile("ReadMarkSurfaces"))
+                ReadMarkSurfaces();
+            using (Profile("ReadLeafs"))
+                ReadLeafs();
+            using (Profile("ReadPlanes"))
+                ReadPlanes();
+            using (Profile("ReadNodes"))
+                ReadNodes();
+            using (Profile("ReadModels"))
+                ReadModels();
+            using (Profile("ReadPvsVisData"))
+                ReadPvsVisData();
+            Debug.Log2("data start ");            
             Debug.Log2("lightmap length " + lightlump.Length);
             Debug.Log2("number of verts " + vertsLump.Length);
             Debug.Log2("number of Faces " + facesLump.Length);
             Debug.Log2("textures " + texinfoLump.Length);
+            Debug.Log2("leafs " + leafs.Length);
             Debug.Log2("marksurf " + markSurfacesLump.Length);
             Debug.Log2("plane Length: " + planesLump.Length);
             Debug.Log2("node lump Length: " + nodesLump.Length);
@@ -64,7 +77,7 @@ namespace bsp
 
 
 
-            if (NumTexLoadFromWad > 0)
+            if (NumTexLoadFromWad > 0 && !disableTexturesAndColliders)
             {
                 Debug.Log2("Reading in textures from wad");
                 yield return findNullTextures();
@@ -93,8 +106,7 @@ namespace bsp
                 }
             }
             string[] wadFileNames;
-            myParser = new EntityParser(entityLump);
-            Dictionary<string, string> mylist = myParser.ReadEntity();
+            Dictionary<string, string> mylist = entityLump.ReadEntity();
             string tempString;
             if (mylist.ContainsKey("wad"))
             {
@@ -134,7 +146,7 @@ namespace bsp
         private void ReadEntities()
         {
             br.BaseStream.Position = header.directory[0].offset;
-            entityLump = new string(br.ReadChars(header.directory[0].length));
+            entityLump = new EntityParser(new string(br.ReadChars(header.directory[0].length)));
         }
         private void ReadEdges()
         {
@@ -178,7 +190,7 @@ namespace bsp
             MemoryStream ms = null;
             yield return Base.CustomCorontinue(loadWad(WadFileName, a => ms = a), null, Throw: false);
             if (ms == null) yield break;
-
+            using (Profile("ReadWad"))
             using (BinaryReader wadStream = new BinaryReader(ms))
             {
                 string wadType = new string(wadStream.ReadChars(4));
@@ -250,38 +262,43 @@ namespace bsp
                     mip.texture = null;
                     continue;
                 }
-                Debug.Log2("starting to read in texture " + mip.name);
+                //Debug.Log2("starting to read in texture " + mip.name);
                 ReadTexture(mip, textureOffset, br);
             }
             Debug.Log2("finished reading textures");
         }
         private void ReadTexture(BSPMipTexture mip, long textureOffset, BinaryReader BinaryReader)
         {
-            BinaryReader.BaseStream.Position = ((mip.width * mip.height / 64) + mip.offset[3] + textureOffset + 2);
-            Color[] colourPalette = new Color[256];
-            bool transparent = false;
-            for (int j = 0; j < 256; j++)
+            if (disableTexturesAndColliders)
+                mip.texture = Texture2D.whiteTexture;
+            else
             {
-                var c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
-                if (c.b == 255 && c.r == 0 && c.g == 0)
+                BinaryReader.BaseStream.Position = ((mip.width * mip.height / 64) + mip.offset[3] + textureOffset + 2);
+                Color[] colourPalette = new Color[256];
+                bool transparent = false;
+                for (int j = 0; j < 256; j++)
                 {
-                    c.a = 0;
-                    transparent = true;
+                    var c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
+                    if (c.b == 255 && c.r == 0 && c.g == 0)
+                    {
+                        c.a = 0;
+                        transparent = true;
+                    }
+                    colourPalette[j] = c;
                 }
-                colourPalette[j] = c;
+                BinaryReader.BaseStream.Position = (textureOffset + mip.offset[0]);
+                int NumberOfPixels = mip.height * mip.width;
+                Color[] colour = new Color[NumberOfPixels];
+                for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
+                {
+                    var i = BinaryReader.ReadByte();
+                    colour[currentPixel] = colourPalette[i];
+                }
+                mip.texture = new Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24, false);
+                mip.texture.SetPixels(colour);
+                mip.texture.filterMode = FilterMode.Point;
+                mip.texture.Apply();
             }
-            BinaryReader.BaseStream.Position = (textureOffset + mip.offset[0]);
-            int NumberOfPixels = mip.height * mip.width;
-            Color[] colour = new Color[NumberOfPixels];
-            for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
-            {
-                var i = BinaryReader.ReadByte();
-                colour[currentPixel] = colourPalette[i];
-            }
-            mip.texture = new Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24, false);
-            mip.texture.SetPixels(colour);
-            mip.texture.filterMode = FilterMode.Point;
-            mip.texture.Apply();
         }
         private void ReadMarkSurfaces()
         {
@@ -296,9 +313,10 @@ namespace bsp
             br.BaseStream.Position = header.directory[4].offset;
             var compressedVIS = br.ReadBytes(header.directory[4].length);
 
-            var notUsed = leafs.ToList();
-            foreach (var leaf in leafs.Skip(1))
+            //var notUsed = leafs.ToList();
+            for (var i = 1; i < leafs.Length; i++)
             {
+                var leaf = leafs[i];
                 List<byte> bytes = new List<byte>();
                 int offset = leaf.VisOffset;
                 if (offset == -1)
@@ -324,21 +342,23 @@ namespace bsp
                 }
 
                 var bits = new BitArray(bytes.ToArray());
+                leaf.pvsList = new List<Leaf>(bits.Count / 10);
                 for (int j = 0; j < bits.Length; j++)
                 {
                     if (bits[j])
                     {
-                        Leaf childLeafs = leafs[j + 1];
-                        leaf.pvsList.Add(childLeafs);
-                        notUsed.Remove(childLeafs);
+                        Leaf a = leafs[j + 1];
+                        a.used = true;
+                        leaf.pvsList.Add(a);
+                        //notUsed.Remove(childLeafs);
 
                     }
                 }
             }
 
 
-            foreach (var leaf in notUsed)
-                leaf.used = false;
+            //foreach (var leaf in notUsed)
+            //    leaf.used = false;
 
 
         }

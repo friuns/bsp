@@ -11,22 +11,24 @@ namespace bsp
     {
         public Texture2D missingtexture;
         string[] hide = new string[] { "sky", "aaatrigger", "black" };
-        public bool renderlights = true;
+        public bool enableLightMap ;
         RendererCache[] allRenderers;
         //private int faceCount = 0;
         //private RendererCache[][] leafRoots;
         public Transform debugTransform;
-        public static Vector3 pos;
+        public static Vector3 playerPos;
         private int oldPvs = 0;
         public bool RenderAllFaces = false;
-
+        public Transform level;
         public override IEnumerator Load(MemoryStream ms)
         {
+            level = new GameObject("level").transform;
+            level.parent = transform;
             yield return base.Load(ms);
-            GenerateVisObjects();
+            using (Profile("GenerateVisObjects"))
+                GenerateVisObjects();
             transform.localScale = scale * Vector3.one;
             UpdatePvs(0);
-            
             loaded = true;
 
         }
@@ -36,7 +38,7 @@ namespace bsp
         {
             if (!loaded) return;
             if (debugTransform)
-                pos = debugTransform.position;
+                playerPos = debugTransform.position;
             if (Input.GetKeyDown(KeyCode.Return))
                 RenderAllFaces = !RenderAllFaces;
             int pvs = RenderAllFaces ? 0 : WalkBSP();
@@ -75,7 +77,7 @@ namespace bsp
 
         private int BSPlookup(int node)
         {
-            var b = planesLump[nodesLump[node].planeNum].plane.GetSide(pos / scale);
+            var b = planesLump[nodesLump[node].planeNum].plane.GetSide(playerPos / scale);
             return nodesLump[node].children[b ? 1 : 0];
         }
         private int WalkBSP(int headnode = 0)
@@ -123,8 +125,8 @@ namespace bsp
 #if !console
             GameObject faceObject = new GameObject("BSPface " + face.faceId);
             face.transform = faceObject.transform;
-
-            faceObject.transform.parent = gameObject.transform;
+            
+            faceObject.transform.parent = level;
             Mesh faceMesh = new Mesh();
             faceMesh.name = "BSPmesh";
             Vector3[] verts = new Vector3[face.numberEdges];
@@ -162,10 +164,10 @@ namespace bsp
             faceObject.GetComponent<MeshFilter>().mesh = faceMesh;
             var renderer = faceObject.AddComponent<MeshRenderer>();
 
-            if (face.texinfo_id >= 0 && renderlights && face.lightmapOffset < lightlump.Length)
+            if (enableLightMap && face.texinfo_id >= 0 && face.lightmapOffset < lightlump.Length)
             {
                 renderer.sharedMaterial = new Material(mat);
-                RenderLights(face, verts, faceMesh, renderer);
+                CreateLightMap(face, verts, faceMesh, renderer);
             }
             else
             {
@@ -181,21 +183,22 @@ namespace bsp
             }
 
 
-                faceObject.isStatic = true;
+            faceObject.isStatic = true;
 
             if (hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
-                faceObject.SetActive(false);
-            else
-            {
-                faceObject.AddComponent<MeshCollider>();
+                renderer.sharedMaterials = new Material[0];
+            //else
+            //{
+                if (!disableTexturesAndColliders)
+                    faceObject.AddComponent<MeshCollider>();
                 faceObject.layer = Layer.Level;
-            }
+            //}
             return renderer;
 #else 
             return null;
 #endif
         }
-        private void RenderLights(BSPFace face, Vector3[] verts, Mesh faceMesh, Renderer faceObjectRenderer)
+        private void CreateLightMap(BSPFace face, Vector3[] verts, Mesh faceMesh, Renderer faceObjectRenderer)
         {
 #if !console
             Material bspMaterial = faceObjectRenderer.sharedMaterial;

@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using ExitGames.Client.Photon;
+using UnityEngine;
 
 namespace bsp
 {
@@ -8,48 +13,56 @@ namespace bsp
         private string entities;
         private int length;
         private int position;
-		
+
         public EntityParser(string entities)
         {
             this.entities = entities;
             length = entities.Length;
             position = 0;
         }
-		
+
         private bool IsWhiteSpace(char c)
         {
             return ((c == ' ') || (c == '\t') || (c == '\r') || (c == '\n'));
         }
-		
+
         private void ReadWhiteSpaces()
         {
-            while (IsWhiteSpace(entities[position])) {
-                position++;        
+            while (position < entities.Length && IsWhiteSpace(entities[position]))
+            {
+                position++;
             }
         }
-		
+
         private void Expect(char c)
         {
-            if (position >= length) {
+            if (position >= length)
+            {
                 throw new Exception(string.Format("Expected {0} but reached end", c));
-            } else if (entities[position] == c) {
+            }
+            else if (entities[position] == c)
+            {
                 position++;
-            } else {
-                throw new Exception(string.Format("Expected {0} at position {1}", c, position));        
+            }
+            else
+            {
+                throw new Exception(string.Format("Expected {0} at position {1}", c, position));
             }
         }
-		
+
         private void ReadUntil(char c)
         {
-            while (entities[position] != c) {
-                if (position >= length) {
+            while (entities[position] != c)
+            {
+                if (position >= length)
+                {
                     throw new Exception(string.Format("Expected {0} but reached end", c));
                 }
                 position++;
             }
             position++;
         }
-		
+
         private string ReadValue()
         {
             ReadWhiteSpaces();
@@ -57,62 +70,124 @@ namespace bsp
             int start = position;
             ReadUntil('\"');
             int length = position - start - 1;
-			
+
             string ret = entities.Substring(start, length);
             return ret;
         }
-		
-        public Dictionary<string, string> ReadEntity()
+
+        public Entity ReadEntity()
         {
             ReadWhiteSpaces();
-			
-            if (entities[position] != '{') {
-                return null;        
+
+            if (position == entities.Length || entities[position] != '{')
+            {
+                return null;
             }
-			
-            Dictionary<string, string> dict = new Dictionary<string, string>();
-			
+
+            var dict = new Entity();
+
             Expect('{');
-			
+
             dict.Add(ReadValue(), ReadValue());
-			
+
             ReadWhiteSpaces();
-			
-            while (entities[position] != '}') {
+
+            while (entities[position] != '}')
+            {
                 string key = ReadValue();
                 string val = ReadValue();
-                if (dict.ContainsKey(key)) {
+                if (dict.ContainsKey(key))
+                {
                     if (dict[key] != val) throw new Exception("Missdefined class");
-                } else {
+                }
+                else
+                {
                     dict.Add(key, val);
                 }
                 ReadWhiteSpaces();
             }
             position++;
-			
+
             return dict;
         }
-		
+
         public Dictionary<string, List<Dictionary<string, string>>> ReadEntities()
         {
             Dictionary<string, List<Dictionary<string, string>>> ret = new Dictionary<string, List<Dictionary<string, string>>>();
-			
-            foreach (var entity in Entities) {
-                if (!ret.ContainsKey(entity["classname"])) {
+
+            foreach (var entity in Entities)
+            {
+                if (!ret.ContainsKey(entity["classname"]))
+                {
                     ret[entity["classname"]] = new List<Dictionary<string, string>>();
                 }
                 ret[entity["classname"]].Add(entity);
             }
             return ret;
         }
-		
-        public IEnumerable<Dictionary<string, string>> Entities {
-            get {
+
+        public IEnumerable<Dictionary<string, string>> Entities
+        {
+            get
+            {
                 Dictionary<string, string> entity = null;
-                while ((entity = ReadEntity()) != null) {
+                while ((entity = ReadEntity()) != null)
+                {
                     yield return entity;
                 }
             }
+        }
+    }
+    public class Entity : Dictionary<string, string>
+    {
+        public string Print()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var a in this)
+                sb.Append(a.Key + ":" + a.Value).AppendLine();
+            return sb.ToString();
+        }
+
+        public new string this[string key]
+        {
+            get
+            {
+                string v;
+                if (TryGetValue(key, out v))
+                    return v;
+                return null;
+            }
+            set { base[key] = value; }
+        }
+
+        public int PropertyInteger(string name, int defaultValue = 0)
+        {
+            string prop;
+            if (TryGetValue(name, out prop))
+            {
+                int d;
+                if (int.TryParse(prop.Trim('*'), NumberStyles.Integer, CultureInfo.InvariantCulture, out d))
+                    return d;
+            }
+            return defaultValue;
+        }
+
+        public Vector3 PropertyVector3(string name)
+        {
+            string prop;
+            if (TryGetValue(name, out prop))
+            {
+                if (prop == null || prop.Count(c => c == ' ') != 2) return Vector3.zero;
+                var split = prop.Replace("[", "").Replace("]", "").Replace("(", "").Replace(")", "").Split(' ');
+                float x, y, z;
+                if (float.TryParse(split[0], NumberStyles.Float, CultureInfo.InvariantCulture, out x)
+                    && float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
+                    && float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z))
+                {
+                    return new Vector3(-x, z, -y) * BspGenerateMapVis.scale;
+                }
+            }
+            return Vector3.zero;
         }
     }
 }
