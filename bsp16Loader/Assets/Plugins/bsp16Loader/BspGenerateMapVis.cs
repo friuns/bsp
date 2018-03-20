@@ -10,8 +10,9 @@ namespace bsp
     public class BspGenerateMapVis : BSP30Map
     {
         public Texture2D missingtexture;
-        string[] hide = new string[] { "sky", "aaatrigger", "black" };
-        public bool enableLightMap ;
+        string[] disable = new string[] { "sky" };
+        string[] hide = new string[] { "aaatrigger", "black" };
+        public bool enableLightMap;
         RendererCache[] allRenderers;
         //private int faceCount = 0;
         //private RendererCache[][] leafRoots;
@@ -125,7 +126,7 @@ namespace bsp
 #if !console
             GameObject faceObject = new GameObject("BSPface " + face.faceId);
             face.transform = faceObject.transform;
-            
+
             faceObject.transform.parent = level;
             Mesh faceMesh = new Mesh();
             faceMesh.name = "BSPmesh";
@@ -185,14 +186,18 @@ namespace bsp
 
             faceObject.isStatic = true;
 
-            if (hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
-                renderer.sharedMaterials = new Material[0];
-            //else
-            //{
+
+            if (disable.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
+                faceObject.SetActive(false);
+            else
+            {
+                if (hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
+                    renderer.sharedMaterials = new Material[0];
+
                 if (!disableTexturesAndColliders)
                     faceObject.AddComponent<MeshCollider>();
                 faceObject.layer = Layer.Level;
-            //}
+            }
             return renderer;
 #else 
             return null;

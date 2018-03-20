@@ -313,7 +313,6 @@ namespace bsp
             br.BaseStream.Position = header.directory[4].offset;
             var compressedVIS = br.ReadBytes(header.directory[4].length);
 
-            //var notUsed = leafs.ToList();
             for (var i = 1; i < leafs.Length; i++)
             {
                 var leaf = leafs[i];
@@ -350,7 +349,6 @@ namespace bsp
                         Leaf a = leafs[j + 1];
                         a.used = true;
                         leaf.pvsList.Add(a);
-                        //notUsed.Remove(childLeafs);
 
                     }
                 }
