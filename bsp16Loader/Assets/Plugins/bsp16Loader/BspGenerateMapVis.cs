@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor;
+
 namespace bsp
 {
     public class BspGenerateMapVis : BSP30Map
@@ -24,7 +24,7 @@ namespace bsp
         public override IEnumerator Load(MemoryStream ms)
         {
             level = new GameObject("level").transform;
-            level.parent = transform;
+            level.SetParent(transform, true);
             yield return base.Load(ms);
             using (Profile("GenerateVisObjects"))
                 GenerateVisObjects();
@@ -124,10 +124,10 @@ namespace bsp
         {
 
 #if !console
-            GameObject faceObject = new GameObject("BSPface " + face.faceId);
+            GameObject faceObject = new GameObject();
             face.transform = faceObject.transform;
 
-            faceObject.transform.parent = level;
+            faceObject.transform.SetParent(level, true);
             Mesh faceMesh = new Mesh();
             faceMesh.name = "BSPmesh";
             Vector3[] verts = new Vector3[face.numberEdges];
@@ -178,8 +178,9 @@ namespace bsp
                     if (!mt.TryGetValue(bspTexInfo.miptex, out m))
                         m = mt[bspTexInfo.miptex] = new Material(bspMipTexture.texture.format == TextureFormat.ARGB32 ? matTrans : mat);
                     m.mainTexture = bspMipTexture.texture;
-                    m.mainTexture.name = bspMipTexture.name;
+                    faceObject.name = m.mainTexture.name = bspMipTexture.name;
                     renderer.sharedMaterial = m;
+
                 }
             }
 
@@ -191,11 +192,15 @@ namespace bsp
                 faceObject.SetActive(false);
             else
             {
-                if (hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase)))
+                var trigger = hide.Any(a => string.Equals(bspMipTexture.name, a, StringComparison.OrdinalIgnoreCase));
+                if (trigger)
                     renderer.sharedMaterials = new Material[0];
 
                 if (!disableTexturesAndColliders)
-                    faceObject.AddComponent<MeshCollider>();
+                {
+                    var c = faceObject.AddComponent<MeshCollider>();
+                    c.enabled = !trigger;
+                }
                 faceObject.layer = Layer.Level;
             }
             return renderer;
@@ -203,6 +208,7 @@ namespace bsp
             return null;
 #endif
         }
+
         private void CreateLightMap(BSPFace face, Vector3[] verts, Mesh faceMesh, Renderer faceObjectRenderer)
         {
 #if !console

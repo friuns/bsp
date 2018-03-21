@@ -34,7 +34,7 @@ namespace bsp
             this.indexOfFirstFace = firstFace;
             this.numberOfFaces = numFaces;
             bounds.SetMinMax(mins,maxs);
-            pos = bounds.max;
+            pos = bounds.min;
         }
     }
 }
