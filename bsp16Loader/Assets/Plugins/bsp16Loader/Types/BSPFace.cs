@@ -17,6 +17,7 @@ namespace bsp
         public Transform transform;
         public RendererCache renderer;
         public Leaf leaf;
+        public BSPModel model;
 
 
         /// <summary>

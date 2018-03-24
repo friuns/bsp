@@ -1,8 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace bsp
 {
+    public struct ModelMipKey
+    {
+        public BSPMipTexture tex;
+        public BSPModel model;
+
+        public ModelMipKey(BSPMipTexture Tex, BSPModel Model)
+        {
+            tex = Tex;
+            model = Model;
+        }
+    }
+    public class MipModel
+    {
+        public string name {get {return mip.name; } }
+        public Texture2D  texture {get {return mip.texture; } }
+        public BSPMipTexture mip;
+        public Mesh mesh = new Mesh();
+        public Material material;
+        public ArrayOffset<Vector3> verts = new ArrayOffset<Vector3>();
+        public ArrayOffset<int> tris = new ArrayOffset<int>();
+        public ArrayOffset<Vector2> uvs = new ArrayOffset<Vector2>();
+    }
     public class BSPMipTexture
     {
         public string name;
@@ -10,9 +33,10 @@ namespace bsp
         public Int32 height;
         public UInt32[] offset;
         public Texture2D texture;
-
+        public bool handled;
         public BSPMipTexture(string Name, UInt32 Width, UInt32 Height, UInt32[] offset)
         {
+            
             //this.name = RemoveControlCharacters(Name);
             this.name = Name;
             this.width = (int)Width;

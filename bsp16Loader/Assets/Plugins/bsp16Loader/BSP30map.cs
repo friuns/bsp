@@ -60,7 +60,7 @@ namespace bsp
                 ReadModels();
             using (Profile("ReadPvsVisData"))
                 ReadPvsVisData();
-            Debug.Log2("data start ");            
+            Debug.Log2("data start ");
             Debug.Log2("lightmap length " + lightlump.Length);
             Debug.Log2("number of verts " + vertsLump.Length);
             Debug.Log2("number of Faces " + facesLump.Length);
@@ -308,55 +308,53 @@ namespace bsp
             for (int i = 0; i < numMarkSurfaces; i++)
                 markSurfacesLump[i] = br.ReadUInt16();
         }
+        //public const bool pvsDisable = true;
         private void ReadPvsVisData()
         {
-            br.BaseStream.Position = header.directory[4].offset;
-            var compressedVIS = br.ReadBytes(header.directory[4].length);
+            //br.BaseStream.Position = header.directory[4].offset;
+            //var compressedVIS = br.ReadBytes(header.directory[4].length);
 
-            for (var i = 1; i < leafs.Length; i++)
-            {
-                var leaf = leafs[i];
-                List<byte> bytes = new List<byte>();
-                int offset = leaf.VisOffset;
-                if (offset == -1)
-                    continue;
-                for (int j = 0; j < Mathf.FloorToInt((modelsLump[0].numLeafs + 7f) / 8f);)
-                {
-                    if (compressedVIS[offset] != 0)
-                    {
-                        bytes.Add(compressedVIS[offset++]);
-                        j++;
-                    }
-                    else
-                    {
-                        int c = compressedVIS[offset + 1];
-                        offset += 2;
-                        while (c != 0)
-                        {
-                            bytes.Add(0);
-                            j++;
-                            c--;
-                        }
-                    }
-                }
+            //for (var i = 1; i < leafs.Length; i++)
+            //{
+            //    var leaf = leafs[i];
+            //    List<byte> bytes = new List<byte>();
+            //    int offset = leaf.VisOffset;
+            //    if (offset == -1)
+            //        continue;
+            //    for (int j = 0; j < Mathf.FloorToInt((modelsLump[0].numLeafs + 7f) / 8f);)
+            //    {
+            //        if (compressedVIS[offset] != 0)
+            //        {
+            //            bytes.Add(compressedVIS[offset++]);
+            //            j++;
+            //        }
+            //        else
+            //        {
+            //            int c = compressedVIS[offset + 1];
+            //            offset += 2;
+            //            while (c != 0)
+            //            {
+            //                bytes.Add(0);
+            //                j++;
+            //                c--;
+            //            }
+            //        }
+            //    }
 
-                var bits = new BitArray(bytes.ToArray());
-                leaf.pvsList = new List<Leaf>(bits.Count / 10);
-                for (int j = 0; j < bits.Length; j++)
-                {
-                    if (bits[j])
-                    {
-                        Leaf a = leafs[j + 1];
-                        a.used = true;
-                        leaf.pvsList.Add(a);
+            //    var bits = new BitArray(bytes.ToArray());
+            //    leaf.pvsList = new List<Leaf>(bits.Count / 10);
+            //    for (int j = 0; j < bits.Length; j++)
+            //    {
+            //        if (bits[j])
+            //        {
+            //            Leaf a = leafs[j + 1];
+            //            a.used = true;
+            //            leaf.pvsList.Add(a);
 
-                    }
-                }
-            }
+            //        }
+            //    }
+            //}
 
-
-            //foreach (var leaf in notUsed)
-            //    leaf.used = false;
 
 
         }
@@ -367,7 +365,12 @@ namespace bsp
             int modelCount = header.directory[14].length / 64;
             modelsLump = new BSPModel[modelCount];
             for (int i = 0; i < modelCount; i++)
-                modelsLump[i] = new BSPModel(br.ReadVector32(), br.ReadVector32(), br.ReadVector32(), br.ReadInt32Array(4), br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
+            {
+                var m = modelsLump[i] = new BSPModel(br.ReadVector32(), br.ReadVector32(), br.ReadVector32(), br.ReadInt32Array(4), br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
+                for (int j = m.indexOfFirstFace; j < m.indexOfFirstFace + m.numberOfFaces; j++)
+                    facesLump[j].model = m;
+            }
+
         }
         public Leaf[] leafs;
         private void ReadLeafs()
