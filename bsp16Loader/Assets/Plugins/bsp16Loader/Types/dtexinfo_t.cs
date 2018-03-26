@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace bsp
 {
-    public class BSPTexInfo
+    public class dtexinfo_t
     {
         public Vector3 vec3s;
         public Vector3 vec3t;
@@ -12,7 +12,7 @@ namespace bsp
         public UInt32 miptex;
         public UInt32 flags;
 
-        public BSPTexInfo(Vector3 vs, float os, Vector3 vt, float ot, UInt32 miptex, UInt32 flags)
+        public dtexinfo_t(Vector3 vs, float os, Vector3 vt, float ot, UInt32 miptex, UInt32 flags)
         {
             this.vec3s = vs;
             this.vec3t = vt;

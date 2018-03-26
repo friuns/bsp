@@ -11,21 +11,22 @@ namespace bsp
         public int faceId;
         public UInt16 plane_id; // Plane the face is parallel to
         public UInt16 side;     // Set if different normals orientation
-        public UInt32 firstEdgeIndex; // Index of the first surfedge
-        public UInt16 numberEdges; // Number of consecutive surfedges
-        public UInt16 texinfo_id; // Index of the texture info structure
+        public UInt32 firstedge; // Index of the first surfedge
+        public UInt16 numedges; // Number of consecutive surfedges
+        public UInt16 texinfo; // Index of the texture info structure
         public byte[] styles;   // Specify lighting styles
         public UInt32 lightmapOffset; // Offsets into the raw lightmap data
         public Transform transform;
         public RendererCache renderer;
         public Leaf leaf;
         public BSPModel model;
-        public Vector3[] vertex;
+        public List<Vector3>  vertex;
         public int[] triangles;
         public Vector2[] uv;
         public Vector2[] uv2;
         public int lightMapW;
         public int lightMapH;
+        public Texture2D lightTex;
 
 
         /// <summary>
@@ -52,9 +53,9 @@ namespace bsp
         {
             plane_id = PlaneID;
             side = Side;
-            firstEdgeIndex = firstEdge;
-            numberEdges = NumberEdges;
-            texinfo_id = texInfoID;
+            firstedge = firstEdge;
+            numedges = NumberEdges;
+            texinfo = texInfoID;
             styles = Styles;
             lightmapOffset = LightMapOffSet;
             if (LightMapOffSet > offset) lightmapOffset = 0;//CANT FIND WHY THIS IS
@@ -70,7 +71,7 @@ namespace bsp
         }
         public override string ToString()
         {
-            return "plane_id " + plane_id + " EdgeListIndex: " + firstEdgeIndex + " NumEdges: " + numberEdges + " TexinfoIndex: " + texinfo_id + "\r\n";
+            return "plane_id " + plane_id + " EdgeListIndex: " + firstedge + " NumEdges: " + numedges + " TexinfoIndex: " + texinfo + "\r\n";
         }
     }
 }
