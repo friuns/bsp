@@ -195,11 +195,11 @@ namespace bsp
             float fMaxU = fUs.Max();
             float fMaxV = fVs.Max();
 
-            int bminsU = (int) Mathf.Floor(fMinU / LM_SAMPLE_SIZE);
-            int bminsV = (int) Mathf.Floor(fMinV / LM_SAMPLE_SIZE);
+            int bminsU = (int)Mathf.Floor(fMinU / LM_SAMPLE_SIZE);
+            int bminsV = (int)Mathf.Floor(fMinV / LM_SAMPLE_SIZE);
 
-            int bmaxsU = (int) Mathf.Ceil(fMaxU / LM_SAMPLE_SIZE);
-            int bmaxsV = (int) Mathf.Ceil(fMaxV / LM_SAMPLE_SIZE);
+            int bmaxsU = (int)Mathf.Ceil(fMaxU / LM_SAMPLE_SIZE);
+            int bmaxsV = (int)Mathf.Ceil(fMaxV / LM_SAMPLE_SIZE);
 
             int extentsW = (bmaxsU - bminsU) * LM_SAMPLE_SIZE;
             int extentsH = (bmaxsV - bminsV) * LM_SAMPLE_SIZE;
@@ -238,14 +238,21 @@ namespace bsp
 
             face.uv2 = UVs2.ToArray();
 
-            Texture2D lightTex = new Texture2D(lightW, lightH);
+            Texture2D lightTex = new Texture2D(lightW, lightH, TextureFormat.RGB24, false);
             Color32[] colourarray = new Color32[lightW * lightH];
-            int tempCount = (int) face.lightmapOffset;
+            int tempCount = (int)face.lightmapOffset;
 
             for (int k = 0; k < lightW * lightH; k++)
             {
                 if (tempCount + 3 > lightlump.Length) break;
-                colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
+                //colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
+
+                var r = lightlump[tempCount];
+                var g = lightlump[tempCount + 1];
+                var b = lightlump[tempCount + 2];
+                colourarray[k] = new Color32((byte)(Mathf.Pow(r / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(g / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(b / 255.0f, 0.45f) * 255), 255);
+
+
                 tempCount += 3;
             }
 
@@ -253,81 +260,9 @@ namespace bsp
             lightTex.filterMode = FilterMode.Bilinear;
             lightTex.wrapMode = TextureWrapMode.Clamp;
             lightTex.Apply();
-            face.lightTex = lightTex;
-        }
-        private void FaceLightmap(BSPFace face, ArraySegment<Vector3> verts)
-        {
-            Vertex[] pVertexList = new Vertex[verts.len];
-            float fUMin = 100000.0f;
-            float fUMax = -10000.0f;
-            float fVMin = 100000.0f;
-            float fVMax = -10000.0f;
-            dtexinfo_t texInfo = texinfoLump[face.texinfo];
 
-            float pMipTexheight = texturesLump[texInfo.miptex].height;
-            float pMipTexwidth = texturesLump[texInfo.miptex].width;
-            for (int i = 0; i < verts.len; i++)
-            {
-                // Add vertex information
-                Vertex vertex = new Vertex(verts[i]);
-                // Generate texture coordinates for face
-                vertex.u = verts[i].x * texInfo.vec3s.x + verts[i].y * texInfo.vec3s.y + verts[i].z * texInfo.vec3s.z + texInfo.offs;
-                vertex.v = verts[i].x * texInfo.vec3t.x + verts[i].y * texInfo.vec3t.y + verts[i].z * texInfo.vec3t.z + texInfo.offt;
-                vertex.u /= pMipTexwidth;
-                vertex.v /= pMipTexheight;
-                vertex.lu = vertex.u;
-                vertex.lv = vertex.v;
-                fUMin = (vertex.u < fUMin) ? vertex.u : fUMin;
-                fUMax = (vertex.u > fUMax) ? vertex.u : fUMax;
-                fVMin = (vertex.v < fVMin) ? vertex.v : fVMin;
-                fVMax = (vertex.v > fVMax) ? vertex.v : fVMax;
-                pVertexList[i] = vertex;
-            }
 
-            int lightMapWidth = (int)(Mathf.Ceil((fUMax * pMipTexwidth) / 16.0f) - Mathf.Floor((fUMin * pMipTexwidth) / 16.0f) + 1.0f);
-            int lightMapHeight = (int)(Mathf.Ceil((fVMax * pMipTexheight) / 16.0f) - Mathf.Floor((fVMin * pMipTexheight) / 16.0f) + 1.0f);
-            // Update light-map vertex u, v coordinates.  These should range from [0.0 -> 1.0] over face.
-            float fUDel = (fUMax - fUMin);
-            if (fUDel > 1e-06f)
-                fUDel = 1f / fUDel;
-            else
-                fUDel = 1f;
-            float fVDel = (fVMax - fVMin);
-            if (fVDel > 1e-06f)
-                fVDel = 1f / fVDel;
-            else
-                fVDel = 1f;
-            for (int n = 0; n < pVertexList.Length; n++)
-            {
-                (pVertexList)[n].lu = Mathf.Clamp((pVertexList[n].lu - fUMin) * fUDel, 0, 1);
-                (pVertexList)[n].lv = Mathf.Clamp((pVertexList[n].lv - fVMin) * fVDel, 0, 1);
-            }
 
-            //    Debug.Log(lightMapWidth+" "+ lightMapHeight);
-            Texture2D lightTex = new Texture2D(lightMapWidth, lightMapHeight);
-            Color32[] colourarray = new Color32[lightMapWidth * lightMapHeight];
-            int tempCount = (int)face.lightmapOffset;
-
-            for (int k = 0; k < lightMapWidth * lightMapHeight; k++)
-            {
-                if (tempCount + 3 > lightlump.Length) break;
-                colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
-                tempCount += 3;
-            }
-
-            lightTex.SetPixels32(colourarray);
-            lightTex.filterMode = FilterMode.Bilinear;
-            lightTex.wrapMode = TextureWrapMode.Clamp;
-            lightTex.Apply();
-            //lt[(int)face.lightmapOffset].lightmapFar = lt[(int)face.lightmapOffset].lightmapNear =
-            //var lt = new LightmapData();
-            //lt.lightmapNear = lt.lightmapFar = lightTex;
-            //lt2.Add(lt);
-            Vector2[] lvs = new Vector2[pVertexList.Length];
-            for (int a = 0; a < pVertexList.Length; a++)
-                lvs[a] = new Vector2(pVertexList[a].lu, pVertexList[a].lv);
-
-            face.uv2 = lvs;
             face.lightTex = lightTex;
         }
 
@@ -346,14 +281,6 @@ namespace bsp
             faceObject.transform.SetParent(level, true);
             var renderer = faceObject.AddComponent<MeshRenderer>();
 
-
-            //if (enableLightMap && face.texinfo_id >= 0 && face.lightmapOffset < lightlump.Length)
-            //{
-            //    renderer.sharedMaterial = new Material(mat);
-            //    CreateLightMap(face, verts, faceMesh, renderer);
-            //}
-            //else
-            //{
             if (mip.texture != null)
             {
                 Material m = mip.material;
@@ -363,11 +290,6 @@ namespace bsp
                 m.mainTexture.name = mip.name;
                 renderer.sharedMaterial = m;
 
-                //Texture2D lm;
-                //Vector2[] uv2;
-                //Debug.Log("Generate lightmap for " + mip.mip.name + " faces:" + mip.faces.Count);
-                //CreateLightmap2(mip.faces, out lm, out uv2);
-                //faceMesh.uv2 = uv2;
 
                 var Lightmap_tex = new Texture2D(1, 1);
                 var inpFaces = mip.faces;
@@ -381,15 +303,11 @@ namespace bsp
                         UV2.Add(new Vector2(inpFaces[i].uv2[j].x * rects[i].width + rects[i].x, inpFaces[i].uv2[j].y * rects[i].height + rects[i].y));
                 }
 
-
                 m.SetTexture("_LightMap", Lightmap_tex);
                 faceMesh.SetUVs(1, UV2);
             }
-            //}
-
 
             faceObject.isStatic = true;
-
 
             if (disable.Any(a => string.Equals(mip.name, a, StringComparison.OrdinalIgnoreCase)))
                 faceObject.SetActive(false);
@@ -409,83 +327,5 @@ namespace bsp
 
         }
 
-
-        private void CreateLightMap1(BSPFace face, Vector3[] verts, Mesh faceMesh, Renderer faceObjectRenderer)
-        {
-#if !console
-            Material bspMaterial = faceObjectRenderer.sharedMaterial;
-            Vertex[] pVertexList = new Vertex[verts.Length];
-            float fUMin = 100000.0f;
-            float fUMax = -10000.0f;
-            float fVMin = 100000.0f;
-            float fVMax = -10000.0f;
-            var bspTexInfo = texinfoLump[face.texinfo];
-            float pMipTexheight = texturesLump[bspTexInfo.miptex].height;
-            float pMipTexwidth = texturesLump[bspTexInfo.miptex].width;
-            for (int i = 0; i < verts.Length; i++)
-            {
-                Vertex vertex = new Vertex(verts[i]);
-                vertex.u = verts[i].x * bspTexInfo.vec3s.x + verts[i].y * bspTexInfo.vec3s.y + verts[i].z * bspTexInfo.vec3s.z + bspTexInfo.offs;
-                vertex.v = verts[i].x * bspTexInfo.vec3t.x + verts[i].y * bspTexInfo.vec3t.y + verts[i].z * bspTexInfo.vec3t.z + bspTexInfo.offt;
-                vertex.u /= pMipTexwidth;
-                vertex.v /= pMipTexheight;
-                vertex.lu = vertex.u;
-                vertex.lv = vertex.v;
-                fUMin = (vertex.u < fUMin) ? vertex.u : fUMin;
-                fUMax = (vertex.u > fUMax) ? vertex.u : fUMax;
-                fVMin = (vertex.v < fVMin) ? vertex.v : fVMin;
-                fVMax = (vertex.v > fVMax) ? vertex.v : fVMax;
-                pVertexList[i] = vertex;
-            }
-            int lightMapWidth = (int)(Mathf.Ceil((fUMax * pMipTexwidth) / 16.0f) - Mathf.Floor((fUMin * pMipTexwidth) / 16.0f) + 1.0f);
-            int lightMapHeight = (int)(Mathf.Ceil((fVMax * pMipTexheight) / 16.0f) - Mathf.Floor((fVMin * pMipTexheight) / 16.0f) + 1.0f);
-            float cZeroTolerance = 1e-06f;
-            float fUDel = (fUMax - fUMin);
-            if (fUDel > cZeroTolerance)
-                fUDel = 1.0f / fUDel;
-            else
-                fUDel = 1.0f;
-            float fVDel = (fVMax - fVMin);
-            if (fVDel > cZeroTolerance)
-                fVDel = 1.0f / fVDel;
-            else
-                fVDel = 1.0f;
-            for (int n = 0; n < pVertexList.Length; n++)
-            {
-                pVertexList[n].lu = (pVertexList[n].lu - fUMin) * fUDel;
-                pVertexList[n].lv = (pVertexList[n].lv - fVMin) * fVDel;
-            }
-
-            Texture2D lightTex = new Texture2D(lightMapWidth, lightMapHeight);
-            Color[] colourarray = new Color[lightMapWidth * lightMapHeight];
-            int tempCount = (int)face.lightmapOffset;
-            for (int k = 0; k < lightMapWidth * lightMapHeight; k++)
-            {
-                if (tempCount + 3 > lightlump.Length) break;
-                colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
-                tempCount += 3;
-            }
-            lightTex.SetPixels(colourarray);
-            lightTex.wrapMode = TextureWrapMode.Clamp;
-            lightTex.Apply();
-            var lvs = new List<Vector2>(new Vector2[pVertexList.Length]);
-            for (int a = 0; a < pVertexList.Length; a++)
-                lvs[a] = new Vector2(pVertexList[a].lu, pVertexList[a].lv);
-            faceMesh.SetUVs(1, lvs);
-            bspMaterial.SetTexture("_LightMap", lightTex);
-
-            if (texturesLump[bspTexInfo.miptex].texture == null)
-            {
-                bspMaterial.mainTexture = missingtexture;
-            }
-            else
-            {
-                bspMaterial.mainTexture = texturesLump[bspTexInfo.miptex].texture;
-                bspMaterial.mainTexture.name = texturesLump[bspTexInfo.miptex].name;
-            }
-            bspMaterial.mainTexture.filterMode = FilterMode.Bilinear;
-            faceObjectRenderer.sharedMaterial = bspMaterial;
-#endif
-        }
     }
 }
