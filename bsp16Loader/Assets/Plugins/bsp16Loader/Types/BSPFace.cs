@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace bsp
@@ -18,6 +20,12 @@ namespace bsp
         public RendererCache renderer;
         public Leaf leaf;
         public BSPModel model;
+        public Vector3[] vertex;
+        public int[] triangles;
+        public Vector2[] uv;
+        public Vector2[] uv2;
+        public int lightMapW;
+        public int lightMapH;
 
 
         /// <summary>
@@ -50,6 +58,10 @@ namespace bsp
             styles = Styles;
             lightmapOffset = LightMapOffSet;
             if (LightMapOffSet > offset) lightmapOffset = 0;//CANT FIND WHY THIS IS
+           
+
+
+
 
         }
         public BSPFace()

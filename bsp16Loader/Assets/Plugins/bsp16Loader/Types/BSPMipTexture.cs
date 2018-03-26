@@ -25,6 +25,7 @@ namespace bsp
         public ArrayOffset<Vector3> verts = new ArrayOffset<Vector3>();
         public ArrayOffset<int> tris = new ArrayOffset<int>();
         public ArrayOffset<Vector2> uvs = new ArrayOffset<Vector2>();
+        public List<BSPFace> faces= new List<BSPFace>();
     }
     public class BSPMipTexture
     {

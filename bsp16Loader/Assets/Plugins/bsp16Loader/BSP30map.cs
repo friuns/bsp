@@ -60,6 +60,7 @@ namespace bsp
                 ReadModels();
             using (Profile("ReadPvsVisData"))
                 ReadPvsVisData();
+
             Debug.Log2("data start ");
             Debug.Log2("lightmap length " + lightlump.Length);
             Debug.Log2("number of verts " + vertsLump.Length);
@@ -171,10 +172,75 @@ namespace bsp
             facesLump = new BSPFace[numFaces];
 
             for (int i = 0; i < numFaces; i++)
-                facesLump[i] = new BSPFace(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt32(), br.ReadUInt16(), br.ReadUInt16(), br.ReadBytes(4), br.ReadUInt32(), header.directory[8].length) { faceId = i };
+            {
+                BSPFace face = facesLump[i] = new BSPFace(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt32(), br.ReadUInt16(), br.ReadUInt16(), br.ReadBytes(4), br.ReadUInt32(), header.directory[8].length) { faceId = i };
+                
+            }
 
             Debug.Log2("faces read");
         }
+
+
+        public void GenerateFace(BSPFace dfaceT)
+        {
+
+            List<Vector3> vertex = new List<Vector3>();
+            List<Vector2> uv = new List<Vector2>();
+            List<Vector2> uv2 = new List<Vector2>();
+
+            for (var i = dfaceT.firstEdgeIndex; i < dfaceT.firstEdgeIndex + dfaceT.numberEdges; i++)
+                vertex.Add(SurfEdgesLump[i] <= 0 ? vertsLump[edgesLump[Mathf.Abs(SurfEdgesLump[i])].vert2] : vertsLump[edgesLump[Mathf.Abs(SurfEdgesLump[i])].vert1]);
+
+            List<int> indices = new List<int>();
+            for (int i = 1; i < vertex.Count - 1; i++)
+            {
+                indices.Add(0);
+                indices.Add(i);
+                indices.Add(i + 1);
+            }
+
+            var dtexinfoT = texinfoLump[dfaceT.texinfo_id];
+            var dmiptexT = miptexLump[dtexinfoT.miptex];
+
+            var scale = 0.03f;
+
+            for (int i = 0; i < vertex.Count; i++)
+            {
+                float DecalS = Vector3.Dot(vertex[i] * scale, dtexinfoT.vec3s) + dtexinfoT.offs * scale;
+                float DecalT = Vector3.Dot(vertex[i] * scale, dtexinfoT.vec3t) + dtexinfoT.offt * scale;
+                uv.Add(new Vector2(DecalS / (dmiptexT.width * scale), DecalT / (dmiptexT.height * scale)));
+            }
+
+            //lightmap
+            List<float> vec3sDot = new List<float>();
+            List<float> vec3tDot = new List<float>();
+            for (int l = 0; l < vertex.Count; l++)
+            {
+                vec3sDot.Add(Vector3.Dot(dtexinfoT.vec3s, vertex[l]) + dtexinfoT.offs);
+                vec3tDot.Add(Vector3.Dot(dtexinfoT.vec3t, vertex[l]) + dtexinfoT.offt);
+            }
+
+            for (int i = 0; i < vertex.Count; i++)
+            {
+                float f21 = (Mathf.Ceil(vec3sDot.Max() / 16f) - Mathf.Floor(vec3sDot.Min() / 16f) + 1) / 2f +
+                            (Vector3.Dot(dtexinfoT.vec3s, vertex[i]) + dtexinfoT.offs - (vec3sDot.Min() + vec3sDot.Max()) / 2f) / 16f;
+
+                float f22 = (Mathf.Ceil(vec3tDot.Max() / 16f) - Mathf.Floor(vec3tDot.Min() / 16f) + 1) / 2f +
+                            (Vector3.Dot(dtexinfoT.vec3t, vertex[i]) + dtexinfoT.offt - (vec3tDot.Min() + vec3tDot.Max()) / 2f) / 16f;
+
+                float DecalS = f21 / (Mathf.CeilToInt(vec3sDot.Max() / 16f) - Mathf.FloorToInt(vec3sDot.Min() / 16f) + 1);
+                float DecalT = f22 / (Mathf.CeilToInt(vec3tDot.Max() / 16f) - Mathf.FloorToInt(vec3tDot.Min() / 16f) + 1);
+                uv2.Add(new Vector2(DecalS, DecalT));
+            }
+
+            dfaceT.vertex = vertex.ToArray();
+            dfaceT.triangles = indices.ToArray();
+            dfaceT.uv = uv.ToArray();
+            dfaceT.uv2 = uv2.ToArray();
+            dfaceT.lightMapW = Mathf.CeilToInt(vec3sDot.Max() / 16f) - Mathf.FloorToInt(vec3sDot.Min() / 16f) + 1;
+            dfaceT.lightMapH = Mathf.CeilToInt(vec3tDot.Max() / 16f) - Mathf.FloorToInt(vec3tDot.Min() / 16f) + 1;
+        }
+
         private void ReadTexinfo()
         {
             br.BaseStream.Position = header.directory[6].offset;
@@ -300,6 +366,50 @@ namespace bsp
                 mip.texture.Apply();
             }
         }
+
+
+#if !new 
+        public void CreateLightmap2(IList<BSPFace> inpFaces, out Texture2D Lightmap_tex, out Vector2[] uv2)
+        {
+            Texture2D[] LMs = new Texture2D[inpFaces.Count];
+
+            for (int i = 0; i < inpFaces.Count; i++)
+            {
+                var inpFace = inpFaces[i];
+
+                if (inpFace.faceId == -1)
+                    continue;
+
+                LMs[i] = new Texture2D(inpFace.lightMapW, inpFace.lightMapH, TextureFormat.RGB24, false);
+                Color32[] TexPixels = new Color32[LMs[i].width * LMs[i].height];
+                var lightofs = facesLump[inpFace.faceId].lightmapOffset;
+                for (int j = 0; j < TexPixels.Length; j++)
+                {
+
+                    byte r = lightlump[lightofs + j * 3];
+                    byte g = lightlump[lightofs + j * 3 + 1];
+                    byte b = lightlump[lightofs + j * 3 + 2];
+                    TexPixels[j] = new Color32(r, g, b, 255);
+
+                    //ColorRGBExp32 ColorRGBExp32 = TexLightToLinear(InpFaces[i].index+ (j * 4));
+                    //TexPixels[j] = new Color32(ColorRGBExp32.r, ColorRGBExp32.g, ColorRGBExp32.b, 255);
+                }
+
+                LMs[i].SetPixels32(TexPixels);
+            }
+            Lightmap_tex = new Texture2D(1, 1);
+            Rect[] UVs2 = Lightmap_tex.PackTextures(LMs, 1);
+            var UV2 = new List<Vector2>();
+            for (var i = 0; i < inpFaces.Count; i++)
+            {
+                DestroyImmediate(LMs[i]);
+                for (int j = 0; j < inpFaces[i].uv2.Length; j++)
+                    UV2.Add(new Vector2((inpFaces[i].uv2[j].x * UVs2[i].width) + UVs2[i].x, (inpFaces[i].uv2[j].y * UVs2[i].height) + UVs2[i].y));
+            }
+            uv2 = UV2.ToArray();
+        }
+#endif
+
         private void ReadMarkSurfaces()
         {
             int numMarkSurfaces = header.directory[11].length / 2;
@@ -372,7 +482,7 @@ namespace bsp
             }
 
         }
-        public Leaf[] leafs;
+        public Leaf[] leafs = new Leaf[0];
         private void ReadLeafs()
         {
             int leafCount = header.directory[10].length / 28;
