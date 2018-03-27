@@ -17,12 +17,9 @@ namespace bsp
         public byte[] styles;   // Specify lighting styles
         public UInt32 lightmapOffset; // Offsets into the raw lightmap data
         public Transform transform;
-        public RendererCache renderer;
+        //public RendererCache renderer;
         public Leaf leaf;
         public BSPModel model;
-        public List<Vector3>  vertex;
-        public int[] triangles;
-        public Vector2[] uv;
         public Vector2[] uv2;
         public int lightMapW;
         public int lightMapH;

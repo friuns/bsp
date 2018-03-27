@@ -91,8 +91,7 @@ namespace bsp
         void GenerateVisObjects()
         {
             //List<RendererCache> cull = new List<RendererCache>();
-            //foreach (var face in facesLump)
-            //    GenerateFace(face);
+            
 
             foreach (var face in facesLump)
             {
@@ -131,7 +130,6 @@ namespace bsp
         void GenerateFaceObject(BSPFace face)
         {
 
-#if !console
             dtexinfo_t bspTexInfo = texinfoLump[face.texinfo];
 
             BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
@@ -173,9 +171,6 @@ namespace bsp
             for (int i = 0; i < face.numedges; i++)
                 uvs[i] = new Vector2((Vector3.Dot(verts[i], bspTexInfo.vec3s) + bspTexInfo.offs) / scales, (Vector3.Dot(verts[i], bspTexInfo.vec3t) + bspTexInfo.offt) / scalet);
 
-#else
-            return null;
-#endif
         }
         private void FaceLightmap2(BSPFace face, ArraySegment<Vector3> verts)
         {
@@ -281,6 +276,9 @@ namespace bsp
             faceObject.transform.SetParent(level, true);
             var renderer = faceObject.AddComponent<MeshRenderer>();
 
+            foreach (var f in mip.faces)
+                f.transform = faceObject.transform;
+
             if (mip.texture != null)
             {
                 Material m = mip.material;
@@ -290,11 +288,12 @@ namespace bsp
                 m.mainTexture.name = mip.name;
                 renderer.sharedMaterial = m;
 
-
-                var Lightmap_tex = new Texture2D(1, 1);
+                
+                //lightmap
                 var inpFaces = mip.faces;
                 var lMs = inpFaces.Select(a => a.lightTex).ToArray();
-                Rect[] rects = Lightmap_tex.PackTextures(lMs, 2);
+                var Lightmap_tex = new Texture2D(1, 1);
+                Rect[] rects = Lightmap_tex.PackTextures(lMs, 1);
                 var UV2 = new List<Vector2>();
                 for (var i = 0; i < inpFaces.Count; i++)
                 {

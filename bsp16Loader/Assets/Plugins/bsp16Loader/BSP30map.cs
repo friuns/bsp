@@ -14,7 +14,7 @@ namespace bsp
         public BSPHeader header;
         public EntityParser entityLump;
         public BSPFace[] facesLump;
-        public RendererCache[] renderers;
+        //public RendererCache[] renderers;
         public BSPEdge[] edgesLump;
         public int[] surfedgesLump;
 

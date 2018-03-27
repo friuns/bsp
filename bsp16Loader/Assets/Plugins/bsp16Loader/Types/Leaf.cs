@@ -18,7 +18,7 @@ namespace bsp
         public Vector3 mins;
         public int NumMarkSurfaces;
         public List<Leaf> pvsList;
-        public RendererCache[] renderers;
+        //public RendererCache[] renderers;
         public int VisOffset;
         public BSPFace[] faces;
 
