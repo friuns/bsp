@@ -11,7 +11,7 @@ namespace bsp
     {
         public Texture2D missingtexture;
         string[] disable = new string[] { "sky" };
-        string[] hide = new string[] { "aaatrigger", "black" };
+        string[] hide = new string[] { "aaatrigger", "black","white" };
         public bool enableLightMap;
         //RendererCache[] allRenderers;
         public Transform debugTransform;
@@ -91,7 +91,7 @@ namespace bsp
         void GenerateVisObjects()
         {
             //List<RendererCache> cull = new List<RendererCache>();
-            
+
 
             foreach (var face in facesLump)
             {
@@ -288,7 +288,7 @@ namespace bsp
                 m.mainTexture.name = mip.name;
                 renderer.sharedMaterial = m;
 
-                
+
                 //lightmap
                 var inpFaces = mip.faces;
                 var lMs = inpFaces.Select(a => a.lightTex).ToArray();
@@ -318,8 +318,9 @@ namespace bsp
 
                 if (!disableTexturesAndColliders)
                 {
-                    var c = faceObject.AddComponent<MeshCollider>();
-                    c.enabled = !trigger;
+
+                    var c = trigger ? faceObject.AddComponent<BoxCollider>() : (Collider)faceObject.AddComponent<MeshCollider>();
+                    c.isTrigger = trigger;
                 }
                 faceObject.layer = Layer.Level;
             }

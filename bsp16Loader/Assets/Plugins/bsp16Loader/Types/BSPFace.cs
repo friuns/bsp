@@ -20,7 +20,7 @@ namespace bsp
         //public RendererCache renderer;
         public Leaf leaf;
         public BSPModel model;
-        public Vector2[] uv2;
+        public Vector2[] uv2 = new Vector2[0];
         public int lightMapW;
         public int lightMapH;
         public Texture2D lightTex;

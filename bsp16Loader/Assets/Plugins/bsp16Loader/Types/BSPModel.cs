@@ -22,17 +22,16 @@ namespace bsp
         public int node { get { return nodes[0]; } }
         public BSPModel()
         {
-
         }
-        public BSPModel(Vector3 mins, Vector3 maxs, Vector3 origin, int[] nodes, int numLeafs, Int32 firstFace, Int32 numFaces)
+        public BSPModel(Vector3 mins, Vector3 maxs, Vector3 origin, int[] Nodes, int NumLeafs, Int32 firstFace, Int32 numFaces)
         {
-            this.nMins = mins;
-            this.nMaxs = maxs;
-            this.vOrigin = origin;
-            this.nodes = nodes;
-            this.numLeafs = numLeafs;
-            this.indexOfFirstFace = firstFace;
-            this.numberOfFaces = numFaces;
+            nMins = mins;
+            nMaxs = maxs;
+            vOrigin = origin;
+            nodes = Nodes;
+            numLeafs = NumLeafs;
+            indexOfFirstFace = firstFace;
+            numberOfFaces = numFaces;
             bounds.SetMinMax(mins,maxs);
             pos = bounds.min;
         }
