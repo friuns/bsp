@@ -322,7 +322,7 @@ namespace bsp
                     var c = trigger ? faceObject.AddComponent<BoxCollider>() : (Collider)faceObject.AddComponent<MeshCollider>();
                     c.isTrigger = trigger;
                 }
-                faceObject.layer = Layer.Level;
+                faceObject.layer = Layer.level;
             }
 
         }
