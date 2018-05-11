@@ -32,7 +32,8 @@ namespace bsp
             numLeafs = NumLeafs;
             indexOfFirstFace = firstFace;
             numberOfFaces = numFaces;
-            bounds.SetMinMax(mins,maxs);
+            bounds.SetMinMax(mins, maxs);
+            bounds.size = new Vector3(Mathf.Abs(bounds.size.x), Mathf.Abs(bounds.size.y), Mathf.Abs(bounds.size.z));
             pos = bounds.min;
         }
     }
