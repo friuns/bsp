@@ -134,7 +134,7 @@ namespace bsp
             int planeCount = header.directory[1].length / 20;
             planesLump = new BSPPlane[planeCount];
             for (int i = 0; i < planeCount; i++)
-                planesLump[i] = new BSPPlane(br.ReadVector3(), br.ReadSingle(), br.ReadInt32());
+                planesLump[i] = new BSPPlane(ext.ReadVector3(br), br.ReadSingle(), br.ReadInt32());
         }
         private void ReadVerts()
         {
@@ -142,7 +142,7 @@ namespace bsp
             int numVerts = header.directory[3].length / 12;
             vertexesLump = new Vector3[numVerts];
             for (int i = 0; i < numVerts; i++)
-                vertexesLump[i] = br.ReadVector3();
+                vertexesLump[i] = ext.ReadVector3(br);
         }
         private void ReadEntities()
         {
@@ -191,7 +191,7 @@ namespace bsp
             texinfoLump = new dtexinfo_t[numTexinfos];
 
             for (int i = 0; i < numTexinfos; i++)
-                texinfoLump[i] = new dtexinfo_t(br.ReadVector3(), br.ReadSingle(), br.ReadVector3(), br.ReadSingle(), br.ReadUInt32(), br.ReadUInt32());
+                texinfoLump[i] = new dtexinfo_t(ext.ReadVector3(br), br.ReadSingle(), ext.ReadVector3(br), br.ReadSingle(), br.ReadUInt32(), br.ReadUInt32());
         }
 
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
