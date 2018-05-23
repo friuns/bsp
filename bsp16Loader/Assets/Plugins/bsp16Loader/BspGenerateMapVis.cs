@@ -11,7 +11,7 @@ namespace bsp
     {
         public Texture2D missingtexture;
         string[] disable = new string[] { "sky" };
-        string[] hide = new string[] { "aaatrigger", "black","white" };
+        string[] hide = new string[] { "aaatrigger", "black", "white" };
         public bool enableLightMap;
         //RendererCache[] allRenderers;
         public Transform debugTransform;
@@ -243,9 +243,10 @@ namespace bsp
                 //colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
 
                 var r = lightlump[tempCount];
-                var g = lightlump[tempCount + 1];
+                byte g = lightlump[tempCount + 1];
                 var b = lightlump[tempCount + 2];
-                colourarray[k] = new Color32((byte)(Mathf.Pow(r / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(g / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(b / 255.0f, 0.45f) * 255), 255);
+                colourarray[k] = new Color32(r, g, b, 255);
+                //=new Color32((byte)(Mathf.Pow(r / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(g / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(b / 255.0f, 0.45f) * 255), 255);
 
 
                 tempCount += 3;
