@@ -303,9 +303,9 @@ namespace bsp
                     var i = BinaryReader.ReadByte();
                     colour[currentPixel] = colourPalette[i];
                 }
-                mip.texture = new Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24, false);
+                mip.texture = new Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24, true);
                 mip.texture.SetPixels(colour);
-                mip.texture.filterMode = FilterMode.Point;
+                //mip.texture.filterMode = FilterMode.Point;
                 mip.texture.Apply();
             }
         }

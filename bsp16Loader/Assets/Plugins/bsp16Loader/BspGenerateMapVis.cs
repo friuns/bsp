@@ -292,7 +292,7 @@ namespace bsp
 
                 //lightmap
                 var inpFaces = mip.faces;
-                var lMs = inpFaces.Select(a => a.lightTex).ToArray();
+                Texture2D[] lMs = inpFaces.Select(a => a.lightTex).ToArray();
                 var Lightmap_tex = new Texture2D(1, 1);
                 Rect[] rects = Lightmap_tex.PackTextures(lMs, 1);
                 var UV2 = new List<Vector2>();
