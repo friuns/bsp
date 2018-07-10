@@ -21,7 +21,7 @@ namespace bsp
         public byte[] lightlump;
         public Vector3[] vertexesLump;
         public dtexinfo_t[] texinfoLump;
-        public BSPMipTexture[] texturesLump;        
+        public BSPMipTexture[] texturesLump;
         public int[] markSurfacesLump;
         public BSPPlane[] planesLump;
         public BSPNode[] nodesLump;
@@ -303,7 +303,7 @@ namespace bsp
                     var i = BinaryReader.ReadByte();
                     colour[currentPixel] = colourPalette[i];
                 }
-                mip.texture = new Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24, true);
+                mip.texture = TextureManager.Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24);
                 mip.texture.SetPixels(colour);
                 //mip.texture.filterMode = FilterMode.Point;
                 mip.texture.Apply();

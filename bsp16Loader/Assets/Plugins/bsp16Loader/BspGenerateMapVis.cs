@@ -233,7 +233,7 @@ namespace bsp
 
             face.uv2 = UVs2.ToArray();
 
-            Texture2D lightTex = new Texture2D(lightW, lightH, TextureFormat.RGB24, false);
+            Texture2D lightTex = TextureManager.Texture2D(lightW, lightH, TextureFormat.RGB24, false);
             Color32[] colourarray = new Color32[lightW * lightH];
             int tempCount = (int)face.lightmapOffset;
 

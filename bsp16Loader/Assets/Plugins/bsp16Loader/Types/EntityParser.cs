@@ -174,10 +174,15 @@ namespace bsp
 
         public Vector3 PropertyAngles(string name)
         {
-            var v = PropertyVector3(name);
-            return new Vector3(v.y, v.z, v.x);
+            var v = PropertyVector3Direct(name);
+            return v;
         }        
         public Vector3 PropertyVector3(string name)
+        {
+            var v = PropertyVector3Direct(name);
+            return new Vector3(-v.x, v.z, -v.y);
+        }
+        public Vector3 PropertyVector3Direct(string name)
         {
             string prop;
             if (TryGetValue(name, out prop))
@@ -189,7 +194,7 @@ namespace bsp
                     && float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
                     && float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z))
                 {
-                    return new Vector3(-x, z, -y);
+                    return new Vector3(x, y, z);
                 }
             }
             return Vector3.zero;
