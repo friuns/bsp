@@ -174,13 +174,25 @@ namespace bsp
 
         public Vector3 PropertyAngles(string name)
         {
-            var v = PropertyVector3Direct(name);
-            return v;
-        }        
+            return PropertyVector3Direct(name);
+        }
         public Vector3 PropertyVector3(string name)
         {
             var v = PropertyVector3Direct(name);
             return new Vector3(-v.x, v.z, -v.y);
+        }
+        public Color PropertyColor(string name)
+        {
+            string prop;
+            var c = Color.white;
+            if (TryGetValue(name, out prop))
+            {
+                var d = prop.Split(' ');
+                for (int i = 0; i < d.Length; i++)
+                    c[i] = float.Parse(d[i]) / 255f;
+            }
+            return c;
+
         }
         public Vector3 PropertyVector3Direct(string name)
         {
