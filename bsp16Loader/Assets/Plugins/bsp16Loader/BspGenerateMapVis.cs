@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine.Rendering;
 
 namespace bsp
 {
@@ -12,7 +13,6 @@ namespace bsp
         public Texture2D missingtexture;
         string[] disable = new string[] { "sky" };
         string[] hide = new string[] { "aaatrigger", "black", "white" };
-        public bool enableLightMap;
         //RendererCache[] allRenderers;
         public Transform debugTransform;
         public static Vector3 playerPos;
@@ -21,11 +21,13 @@ namespace bsp
         public Transform level;
         public override IEnumerator Load(MemoryStream ms)
         {
+            LightmapSettings.lightmapsMode = LightmapsMode.NonDirectional; // make sure you bake scene with substractive
             level = new GameObject("level").transform;
             level.SetParent(transform, true);
             yield return base.Load(ms);
             using (Profile("GenerateVisObjects"))
                 GenerateVisObjects();
+            LightmapSettings.lightmaps = lightmapDatas.ToArray();
             transform.localScale = scale * Vector3.one;
             //UpdatePvs(0);
             //loaded = true;
@@ -245,7 +247,8 @@ namespace bsp
                 var r = lightlump[tempCount];
                 byte g = lightlump[tempCount + 1];
                 var b = lightlump[tempCount + 2];
-                colourarray[k] = new Color32(r, g, b, 255);
+                colourarray[k] = new Color32(r, g, b, 255)+Color.white/2;
+                
                 //=new Color32((byte)(Mathf.Pow(r / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(g / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(b / 255.0f, 0.45f) * 255), 255);
 
 
@@ -261,16 +264,14 @@ namespace bsp
 
             face.lightTex = lightTex;
         }
-
+        List<LightmapData> lightmapDatas = new List<LightmapData>();
         void GenerateMesh(MipModel mip)
         {
             Mesh faceMesh = mip.mesh;
             faceMesh.name = mip.name;
             faceMesh.vertices = mip.verts.ToArray();
-            //faceMesh.triangles = mip.tris.ToArray();
             faceMesh.SetIndices(mip.tris.ToArray(), MeshTopology.Triangles, 0);
             faceMesh.uv = mip.uvs.ToArray();
-            //Debug.Log(mip.name + " verts: " + faceMesh.vertices.Length + " tris: " + faceMesh.triangles.Length + " uvs:" + faceMesh.uv.Length);
             faceMesh.RecalculateNormals();
             var faceObject = new GameObject(mip.name);
             faceObject.AddComponent<MeshFilter>().mesh = faceMesh;
@@ -304,6 +305,10 @@ namespace bsp
                 }
 
                 m.SetTexture("_LightMap", Lightmap_tex);
+                lightmapDatas.Add(new LightmapData { lightmapDir = Lightmap_tex,lightmapColor = Lightmap_tex,shadowMask = Lightmap_tex});
+                renderer.lightmapIndex = lightmapDatas.Count - 1;
+                renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
+                
                 faceMesh.SetUVs(1, UV2);
             }
 
