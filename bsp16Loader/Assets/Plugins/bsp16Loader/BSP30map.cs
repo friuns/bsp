@@ -10,7 +10,7 @@ namespace bsp
     {
         internal bool disableTexturesAndColliders = false;
         private int NumTexLoadFromWad;
-        private BinaryReader br;
+        private new BinaryReader br;
         public BSPHeader header;
         public EntityParser entityLump;
         public BSPFace[] facesLump;
