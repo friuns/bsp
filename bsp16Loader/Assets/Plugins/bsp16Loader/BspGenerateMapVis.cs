@@ -208,7 +208,8 @@ namespace bsp
             float fMidPolyV = (fMinV + fMaxV) / 2f;
             float fMidTexU = (lightW) / 2f;
             float fMidTexV = (lightH) / 2f;
-            List<Vector2> UVs2 = new List<Vector2>();
+            
+            List<Vector2> UVs2 = Temp<Vector2>.GetTempList();
             for (int i = 0; i < verts.len; i++)
             {
                 float fU = Vector3.Dot(verts[i], texinfo.vec3s) + texinfo.offs; // - textureminsW;
