@@ -10,24 +10,29 @@ namespace bsp
 {
     public class BspGenerateMapVis : BSP30Map
     {
-        public Texture2D missingtexture;
+        //public Texture2D missingtexture;
         string[] disable = new string[] { "sky" };
         string[] hide = new string[] { "aaatrigger", "black", "white" };
         //RendererCache[] allRenderers;
-        public Transform debugTransform;
+        //public Transform debugTransform;
         public static Vector3 playerPos;
         //private int oldPvs = 0;
-        public bool RenderAllFaces = false;
+        public bool useLightMaps;
+        //public bool RenderAllFaces = false;
         public Transform level;
         public override IEnumerator Load(MemoryStream ms)
         {
-            LightmapSettings.lightmapsMode = LightmapsMode.NonDirectional; // make sure you bake scene with substractive
+
             level = new GameObject("level").transform;
             level.SetParent(transform, true);
             yield return base.Load(ms);
             using (Profile("GenerateVisObjects"))
                 GenerateVisObjects();
-            LightmapSettings.lightmaps = lightmapDatas.ToArray();
+            if (useLightMaps)
+            {
+                LightmapSettings.lightmapsMode = LightmapsMode.NonDirectional; // make sure you bake scene with substractive
+                LightmapSettings.lightmaps = lightmapDatas.ToArray();
+            }
             transform.localScale = scale * Vector3.one;
             //UpdatePvs(0);
             //loaded = true;
@@ -208,7 +213,7 @@ namespace bsp
             float fMidPolyV = (fMinV + fMaxV) / 2f;
             float fMidTexU = (lightW) / 2f;
             float fMidTexV = (lightH) / 2f;
-            
+
             List<Vector2> UVs2 = Temp<Vector2>.GetTempList();
             for (int i = 0; i < verts.len; i++)
             {
@@ -248,8 +253,8 @@ namespace bsp
                 var r = lightlump[tempCount];
                 byte g = lightlump[tempCount + 1];
                 var b = lightlump[tempCount + 2];
-                colourarray[k] = new Color32(r, g, b, 255)+Color.white/2;
-                
+                colourarray[k] = new Color32(r, g, b, 255) + Color.white / 2;
+
                 //=new Color32((byte)(Mathf.Pow(r / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(g / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(b / 255.0f, 0.45f) * 255), 255);
 
 
@@ -306,10 +311,14 @@ namespace bsp
                 }
 
                 m.SetTexture("_LightMap", Lightmap_tex);
-                lightmapDatas.Add(new LightmapData { lightmapDir = Lightmap_tex,lightmapColor = Lightmap_tex,shadowMask = Lightmap_tex});
-                renderer.lightmapIndex = lightmapDatas.Count - 1;
-                renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
-                
+                if (useLightMaps)
+                {
+                    lightmapDatas.Add(new LightmapData { lightmapDir = Lightmap_tex, lightmapColor = Lightmap_tex, shadowMask = Lightmap_tex });
+                    renderer.lightmapIndex = lightmapDatas.Count - 1;
+                    renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
+                }
+                else
+                    renderer.shadowCastingMode = ShadowCastingMode.Off;
                 faceMesh.SetUVs(1, UV2);
             }
 
