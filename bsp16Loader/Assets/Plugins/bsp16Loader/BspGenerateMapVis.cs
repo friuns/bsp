@@ -250,12 +250,12 @@ namespace bsp
                 if (tempCount + 3 > lightlump.Length) break;
                 //colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
 
-                var r = lightlump[tempCount];
+                byte r = lightlump[tempCount];
                 byte g = lightlump[tempCount + 1];
-                var b = lightlump[tempCount + 2];
+                byte b = lightlump[tempCount + 2];
                 colourarray[k] = new Color32(r, g, b, 255) + Color.white / 2;
 
-                //=new Color32((byte)(Mathf.Pow(r / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(g / 255.0f, 0.45f) * 255), (byte)(Mathf.Pow(b / 255.0f, 0.45f) * 255), 255);
+                colourarray[k] = new Color32((byte)(Mathf.Pow(colourarray[k].r / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].g / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].b / 255.0f, 2) * 255), 255);
 
 
                 tempCount += 3;

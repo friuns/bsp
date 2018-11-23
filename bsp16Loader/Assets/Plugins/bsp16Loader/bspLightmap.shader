@@ -5,15 +5,16 @@
 // - no lightmap support
 // - no per-material color
 
-Shader "Unlit Texture" {
+Shader "bspLightmap" {
 Properties {
     _MainTex ("Base (RGB)", 2D) = "white" {}
-	_LightMap ("Base (RGB)", 2D) = "white" {}
+	_LightMap ("Lightmap (RGB)", 2D) = "white" {}
+	_Color ("Main Color", Color) = (1,1,1,1)
 }
 
 SubShader {
     Tags { "RenderType"="Opaque" }
-    LOD 100
+    LOD 200
 
     Pass {
 	  Tags {"LightMode"="ForwardBase"}
@@ -68,7 +69,7 @@ SubShader {
             fixed4 frag (v2f i) : SV_Target
             {
 				fixed shadow = SHADOW_ATTENUATION(i);
-                fixed4 col = tex2D(_MainTex, i.texcoord)*min(pow(tex2D(_LightMap, i.texcoord1),2),max(shadow,.5)*half4(1,1,1,1)) ;
+                fixed4 col = tex2D(_MainTex, i.texcoord)*min(tex2D(_LightMap, i.texcoord1),max(shadow,.5)*half4(1,1,1,1)) ;
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 UNITY_OPAQUE_ALPHA(col.a);
                 return col;
@@ -76,5 +77,5 @@ SubShader {
         ENDCG
     }UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 }
-
+Fallback "Legacy Shaders/Lightmapped/VertexLit2"
 }
