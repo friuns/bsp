@@ -2,14 +2,14 @@
 using System.Text;
 using UnityEngine;
 
+
 namespace bsp
 {
-    public static class ext
+    public static class bspExt
     {
+     
 
-        
 
-        
 
         public static Point3s ReadPoint3s(this BinaryReader BinRead)
         {

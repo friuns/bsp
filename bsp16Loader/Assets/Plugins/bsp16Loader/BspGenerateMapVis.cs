@@ -152,7 +152,7 @@ namespace bsp
             {
                 var edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
                 var vert = surfedgesLump[face.firstedge + i] < 0 ? edge.vert1 : edge.vert2;
-                verts[i] = ext.ConvertScaleVertex(vertexesLump[vert]);
+                verts[i] = bspExt.ConvertScaleVertex(vertexesLump[vert]);
                 edgestep++;
             }
 
