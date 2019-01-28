@@ -62,7 +62,7 @@ SubShader {
                 o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
 				o.texcoord1 = TRANSFORM_TEX(v.texcoord1, _LightMap);
                 UNITY_TRANSFER_FOG(o,o.pos);
-				 /*TRANSFER_SHADOW(o)*/
+				 TRANSFER_SHADOW(o)
                 return o;
             }
 
