@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 namespace bsp
 {
@@ -287,14 +288,26 @@ namespace bsp
                 bool transparent = false;
                 for (int j = 0; j < 256; j++)
                 {
-                    var c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
-                    if (c.b == 255 && c.r == 0 && c.g == 0)
+
+                    Color32 c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
+                    if (j == 255)
                     {
+                        //Debug.LogError(mip.name + " color at 255:" + c);
                         c.a = 0;
-                        transparent = true;
                     }
+                    //if (c.b == 255 && c.r == 0 && c.g == 0)
+                    //{
+                    //    c.a = 0;
+                    //    transparent = true;
+                    //    Debug.LogError(mip.name + " color index:" + j);
+                    //}
+
                     colourPalette[j] = c;
                 }
+
+                if (mip.name.StartsWith("{"))
+                    transparent = true;
+
                 BinaryReader.BaseStream.Position = (textureOffset + mip.offset[0]);
                 int NumberOfPixels = mip.height * mip.width;
                 Color[] colour = new Color[NumberOfPixels];
@@ -304,8 +317,10 @@ namespace bsp
                     colour[currentPixel] = colourPalette[i];
                 }
                 mip.texture = TextureManager.Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24);
+
                 mip.texture.SetPixels(colour);
-                //mip.texture.filterMode = FilterMode.Point;
+                if (transparent)
+                    mip.texture.filterMode = FilterMode.Point;
                 mip.texture.Apply();
             }
         }
