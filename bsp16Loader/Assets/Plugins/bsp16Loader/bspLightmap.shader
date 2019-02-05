@@ -33,7 +33,7 @@ SubShader {
             #include "AutoLight.cginc"
 
             struct appdata_t {
-                float4 pos : POSITION;
+                float4 vertex  : POSITION;
                 float2 texcoord : TEXCOORD0;
 				float2 texcoord1 : TEXCOORD1;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -58,7 +58,7 @@ SubShader {
                 v2f o;
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-                o.pos = UnityObjectToClipPos(v.pos);
+                o.pos = UnityObjectToClipPos(v.vertex);
                 o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
 				o.texcoord1 = TRANSFORM_TEX(v.texcoord1, _LightMap);
                 UNITY_TRANSFER_FOG(o,o.pos);
