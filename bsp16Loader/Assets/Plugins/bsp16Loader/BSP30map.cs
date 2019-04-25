@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 namespace bsp
 {
-    public class BSP30Map : Base
+    public partial class BSP30Map : Base
     {
         internal bool disableTexturesAndColliders = false;
         private int NumTexLoadFromWad;
