@@ -214,7 +214,7 @@ namespace bsp
             float fMidTexU = (lightW) / 2f;
             float fMidTexV = (lightH) / 2f;
 
-            List<Vector2> UVs2 = Temp<Vector2>.GetTempList();
+            List<Vector2> UVs2 = Temp2<Vector2>.GetTempList();
             for (int i = 0; i < verts.len; i++)
             {
                 float fU = Vector3.Dot(verts[i], texinfo.vec3s) + texinfo.offs; // - textureminsW;
