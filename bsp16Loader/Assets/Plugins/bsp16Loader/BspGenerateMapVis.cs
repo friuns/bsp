@@ -24,7 +24,7 @@ namespace bsp
         {
 
             level = new GameObject("level").transform;
-            level.SetParent(transform, true);
+            level.SetParent(transform, true); 
             yield return base.Load(ms);
             using (Profile("GenerateVisObjects"))
                 GenerateVisObjects();
@@ -334,11 +334,10 @@ namespace bsp
 
                 if (!disableTexturesAndColliders)
                 {
-
-                    var c = trigger ? faceObject.AddComponent<BoxCollider>() : (Collider)faceObject.AddComponent<MeshCollider>();
+                    Collider c = trigger ? faceObject.AddComponent<BoxCollider>() : (Collider)faceObject.AddComponent<MeshCollider>();
                     c.isTrigger = trigger;
-                }
-                faceObject.layer = Layer.level;
+                } 
+                faceObject.layer = trigger?Layer.trigger: Layer.level;
             }
 
         }
