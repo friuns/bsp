@@ -10,7 +10,6 @@ namespace bsp
 {
     public class Leaf
     {
-        public bool used;
         public byte[] AmbientLevels;
         public int ContentsType;
         public int FirstMarkSurface;
@@ -41,7 +40,7 @@ namespace bsp
         public string print()
         {
 
-            return "used:" + used + " Type: " + ContentsType + " Vislist: " + VisOffset + " Mins/Maxs: " + mins + " / " + maxs;
+            return " Type: " + ContentsType + " Vislist: " + VisOffset + " Mins/Maxs: " + mins + " / " + maxs;
         }
     }
 }
