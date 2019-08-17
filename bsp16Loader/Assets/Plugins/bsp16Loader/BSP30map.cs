@@ -198,7 +198,7 @@ namespace bsp
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
         {
             MemoryStream ms = null;
-            yield return Base.CustomCorontinue(loadWad(WadFileName, a => ms = a), null, Throw: false);
+            yield return CustomCorontinue(loadWad(WadFileName, a => ms = a), null, Throw: false);
             if (ms == null) yield break;
             using (Profile("ReadWad"))
             using (BinaryReader wadStream = new BinaryReader(ms))
