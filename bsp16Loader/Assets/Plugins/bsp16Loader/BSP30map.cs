@@ -293,7 +293,8 @@ namespace bsp
                     if (j == 255)
                     {
                         //Debug.LogError(mip.name + " color at 255:" + c);
-                        c.a = 0;
+                        
+                        c.r = c.b = c.g = c.a = 0; 
                     }
                     //if (c.b == 255 && c.r == 0 && c.g == 0)
                     //{
@@ -316,11 +317,12 @@ namespace bsp
                     var i = BinaryReader.ReadByte();
                     colour[currentPixel] = colourPalette[i];
                 }
-                mip.texture = TextureManager.Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24);
+                mip.texture = TextureManager.Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24/*,!transparent*/);
+                mip.texture.alphaIsTransparency = transparent; //does nothing
 
                 mip.texture.SetPixels(colour);
-                if (transparent)
-                    mip.texture.filterMode = FilterMode.Point;
+//                if (transparent)
+//                    mip.texture.filterMode = FilterMode.Point;
                 mip.texture.Apply();
             }
         }
