@@ -318,8 +318,6 @@ namespace bsp
                     colour[currentPixel] = colourPalette[i];
                 }
                 mip.texture = TextureManager.Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24/*,!transparent*/);
-                mip.texture.alphaIsTransparency = transparent; //does nothing
-
                 mip.texture.SetPixels(colour);
 //                if (transparent)
 //                    mip.texture.filterMode = FilterMode.Point;

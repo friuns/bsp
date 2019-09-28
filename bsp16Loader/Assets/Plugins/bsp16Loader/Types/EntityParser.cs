@@ -140,6 +140,10 @@ namespace bsp
     }
     public class Entity : Dictionary<string, string>
     {
+        public string className{get{return this["classname"]; }}
+        public bool func_Door { get { return className == "func_door"; } }
+        public bool func_Door_Rotating { get { return className== "func_door_rotating"; } }
+        public Vector3 angles { get { return PropertyAngles("angles")+Vector3.up*PropertyInteger("angle"); } }
         public string Print()
         {
             StringBuilder sb = new StringBuilder();
