@@ -39,7 +39,7 @@ namespace bsp
 
         }
         //bool loaded;
-        public const float scale = 0.03f;
+        public const float scale = Math2.itchToM;
         public void Update()
         {
             //if (!loaded) return;
