@@ -107,13 +107,11 @@ namespace bsp
                     IndexOfTexinfo++;
                 }
             }
-            string[] wadFileNames;
             Dictionary<string, string> mylist = entityLump.ReadEntity();
-            string tempString;
             if (mylist.ContainsKey("wad"))
             {
-                tempString = mylist["wad"];
-                wadFileNames = tempString.Split(';');
+                var tempString = mylist["wad"];
+                var wadFileNames = tempString.Split(';');
                 for (int i = 0; i < wadFileNames.Length; i++)
                 {
                     wadFileNames[i] = wadFileNames[i].Substring(wadFileNames[i].LastIndexOf("\\") + 1);//remove unwanted text

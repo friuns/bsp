@@ -287,14 +287,17 @@ namespace bsp
             foreach (var f in mip.faces)
                 f.transform = faceObject.transform;
 
+            var transparent=false;
             if (mip.texture != null)
             {
                 Material m = mip.material;
+                transparent = mip.texture.format == TextureFormat.ARGB32;
                 if (m == null)
-                    mip.material = m = new Material(mip.texture.format == TextureFormat.ARGB32 ? matTrans : mat);
+                    mip.material = m = new Material(transparent ? matTrans : mat);
                 m.mainTexture = mip.texture;
                 m.mainTexture.name = mip.name;
                 renderer.sharedMaterial = m;
+                
 
 
                 //lightmap
@@ -336,8 +339,10 @@ namespace bsp
                 {
                     Collider c = trigger ? faceObject.AddComponent<BoxCollider>() : (Collider)faceObject.AddComponent<MeshCollider>();
                     c.isTrigger = trigger;
-                } 
-                faceObject.layer = trigger?Layer.trigger: Layer.level;
+                }
+                
+                
+                faceObject.layer = transparent?Layer.ignoreRayCast: trigger?Layer.trigger: Layer.level;
             }
 
         }
