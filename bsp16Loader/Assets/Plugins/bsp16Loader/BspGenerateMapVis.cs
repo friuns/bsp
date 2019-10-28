@@ -288,7 +288,9 @@ namespace bsp
                 f.transform = faceObject.transform;
 
             var transparent=false;
-            if (mip.texture != null)
+            if (mip.texture == null)
+                renderer.sharedMaterial = mat; 
+            else
             {
                 Material m = mip.material;
                 transparent = mip.texture.format == TextureFormat.ARGB32;
@@ -342,7 +344,7 @@ namespace bsp
                 }
                 
                 
-                faceObject.layer = transparent?Layer.ignoreRayCast: trigger?Layer.trigger: Layer.level;
+                faceObject.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
             }
 
         }
