@@ -29,7 +29,7 @@ namespace bsp
         public BSPModel[] modelsLump;
 
         public Func<string, Action<MemoryStream>, IEnumerator> loadWad;
-        public virtual IEnumerator Load(MemoryStream ms)
+        public virtual IEnumerator Load(Stream ms)
         {
             br = new BinaryReader(ms);
             header = new BSPHeader(br);
@@ -271,7 +271,10 @@ namespace bsp
                     continue;
                 }
                 //Debug.Log2("starting to read in texture " + mip.name);
-                ReadTexture(mip, textureOffset, br);
+                try
+                {
+                    ReadTexture(mip, textureOffset, br);
+                }catch(Exception e){UnityEngine.Debug.LogException(e);}
             }
             Debug.Log2("finished reading textures");
         }

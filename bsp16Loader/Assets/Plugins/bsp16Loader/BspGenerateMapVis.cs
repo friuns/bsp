@@ -20,7 +20,7 @@ namespace bsp
         public bool useLightMaps;
         //public bool RenderAllFaces = false;
         public Transform level;
-        public override IEnumerator Load(MemoryStream ms)
+        public override IEnumerator Load(Stream ms)
         {
 
             level = new GameObject("level").transform;
