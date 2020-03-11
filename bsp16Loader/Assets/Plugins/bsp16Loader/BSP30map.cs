@@ -35,33 +35,33 @@ namespace bsp
             header = new BSPHeader(br);
             Debug.Log(header.PrintInfo());
             //new BspInfo();
-            using (Profile("ReadEntities"))
-                ReadEntities();
-            using (Profile("ReadFaces"))
-                ReadFaces();
-            using (Profile("ReadEdges"))
-                ReadEdges();
-            using (Profile("ReadVerts"))
-                ReadVerts();
-            using (Profile("ReadTexinfo"))
-                ReadTexinfo();
-            using (Profile("ReadLightLump"))
-                ReadLightLump();
-            using (Profile("Textures"))
-                ReadTextures();
-            using (Profile("ReadMarkSurfaces"))
-                ReadMarkSurfaces();
-            using (Profile("ReadLeafs"))
-                ReadLeafs();
-            using (Profile("ReadPlanes"))
-                ReadPlanes();
-            using (Profile("ReadNodes"))
-                ReadNodes();
-            using (Profile("ReadModels"))
-                ReadModels();
-            using (Profile("ReadPvsVisData"))
-                ReadPvsVisData();
 
+            using (ProfilePrint("ReadEntities"))
+                ReadEntities();
+            using (ProfilePrint("ReadFaces"))
+                ReadFaces();
+            using (ProfilePrint("ReadEdges"))
+                ReadEdges();
+            using (ProfilePrint("ReadVerts"))
+                ReadVerts();
+            using (ProfilePrint("ReadTexinfo"))
+                ReadTexinfo();
+            using (ProfilePrint("ReadLightLump"))
+                ReadLightLump();
+            using (ProfilePrint("Textures"))
+                ReadTextures();
+            using (ProfilePrint("ReadMarkSurfaces"))
+                ReadMarkSurfaces();
+            using (ProfilePrint("ReadLeafs"))
+                ReadLeafs();
+            using (ProfilePrint("ReadPlanes"))
+                ReadPlanes();
+            using (ProfilePrint("ReadNodes"))
+                ReadNodes();
+            using (ProfilePrint("ReadModels"))
+                ReadModels();
+            using (ProfilePrint("ReadPvsVisData"))
+                ReadPvsVisData();
             Debug.Log2("data start ");
             Debug.Log2("lightmap length " + lightlump.Length);
             Debug.Log2("number of verts " + vertexesLump.Length);
@@ -76,14 +76,13 @@ namespace bsp
             Debug.Log2("clipNodes " + header.directory[9].length / 8);
             br.BaseStream.Dispose();
 
+            using (ProfilePrint("load textures from wad"))
+                if (NumTexLoadFromWad > 0 && !disableTexturesAndColliders)
+                {
+                    Debug.Log2("Reading in textures from wad");
+                    yield return findNullTextures();
+                }
 
-
-
-            if (NumTexLoadFromWad > 0 && !disableTexturesAndColliders)
-            {
-                Debug.Log2("Reading in textures from wad");
-                yield return findNullTextures();
-            }
         }
 
 
@@ -198,7 +197,7 @@ namespace bsp
             MemoryStream ms = null;
             yield return CustomCorontinue(loadWad(WadFileName, a => ms = a), null, Throw: false);
             if (ms == null) yield break;
-            using (Profile("ReadWad"))
+            using (ProfilePrint("ReadWad"))
             using (BinaryReader wadStream = new BinaryReader(ms))
             {
                 string wadType = new string(wadStream.ReadChars(4));

@@ -32,7 +32,7 @@ namespace bsp
             offset += len;
             return segment;
         }
-        public T[] array = new T[100000];
+        public T[] array = new T[1000];
         public int offset;
         public T[] ToArray()
         {

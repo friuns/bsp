@@ -26,7 +26,7 @@ namespace bsp
             level = new GameObject("level").transform;
             level.SetParent(transform, true); 
             yield return base.Load(ms);
-            using (Profile("GenerateVisObjects"))
+            using (ProfilePrint("GenerateVisObjects"))
                 GenerateVisObjects();
             if (useLightMaps)
             {
@@ -99,7 +99,7 @@ namespace bsp
         {
             //List<RendererCache> cull = new List<RendererCache>();
 
-
+            using (ProfilePrint("GenerateFaceObject"))
             foreach (var face in facesLump)
             {
                 GenerateFaceObject(face);
@@ -110,6 +110,7 @@ namespace bsp
                 //    cull.Add(face.renderer);
                 //}
             }
+            using (ProfilePrint("GenerateMesh"))
             foreach (var a in mipModels.Values)
                 GenerateMesh(a);
             //renderers = cull.ToArray();
@@ -136,7 +137,7 @@ namespace bsp
         Dictionary<ModelMipKey, MipModel> mipModels = new Dictionary<ModelMipKey, MipModel>();
         void GenerateFaceObject(BSPFace face)
         {
-
+            
             dtexinfo_t bspTexInfo = texinfoLump[face.texinfo];
 
             BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
@@ -144,10 +145,11 @@ namespace bsp
             MipModel mip2;
             var key = new ModelMipKey(mip, face.model);
             if (!mipModels.TryGetValue(key, out mip2))
-                mip2 = mipModels[key] = new MipModel() { mip = mip };
+                mip2 = mipModels[key] = new MipModel() {mip = mip};
             mip2.faces.Add(face);
-            ArraySegment<Vector3> verts = mip2.verts.GetNextSegment(face.numedges); ;
-            int edgestep = (int)face.firstedge;
+            ArraySegment<Vector3> verts = mip2.verts.GetNextSegment(face.numedges);
+
+            int edgestep = (int) face.firstedge;
             for (int i = 0; i < face.numedges; i++)
             {
                 var edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
@@ -166,11 +168,9 @@ namespace bsp
                 tris[tristep + 1] = i2 + 1;
                 tristep += 3;
             }
-            if (face.lightmapOffset < lightlump.Length)
-            {
-                FaceLightmap2(face, verts);
-            }
 
+            if (face.lightmapOffset < lightlump.Length)
+                FaceLightmap2(face, verts);
 
             float scales = mip.width;
             float scalet = mip.height;
@@ -247,13 +247,15 @@ namespace bsp
 
             for (int k = 0; k < lightW * lightH; k++)
             {
+                
                 if (tempCount + 3 > lightlump.Length) break;
                 //colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
 
                 byte r = lightlump[tempCount];
                 byte g = lightlump[tempCount + 1];
                 byte b = lightlump[tempCount + 2];
-                colourarray[k] = new Color32(r, g, b, 255) + Color.white / 2;
+                
+                colourarray[k] = new Color32(Clamp(r + 128), Clamp(g + 128), Clamp(b + 128), 255);
 
                 colourarray[k] = new Color32((byte)(Mathf.Pow(colourarray[k].r / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].g / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].b / 255.0f, 2) * 255), 255);
 
@@ -269,6 +271,10 @@ namespace bsp
 
 
             face.lightTex = lightTex;
+        }
+        public static byte Clamp(int b)
+        {
+            return b > 255 ? (byte) 255 : (byte) b;
         }
         List<LightmapData> lightmapDatas = new List<LightmapData>();
         void GenerateMesh(MipModel mip)
