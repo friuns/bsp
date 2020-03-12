@@ -17,15 +17,29 @@ namespace bsp
     }
     public class MipModel
     {
+        // public MipModel(int verts, int tris, int uvs)
+        // {
+        //     
+        // }
         public string name {get {return mip.name; } }
         public Texture2D  texture {get {return mip.texture; } }
         public BSPMipTexture mip;
         public Mesh mesh = new Mesh();
         public Material material;
-        public ArrayOffset<Vector3> verts = new ArrayOffset<Vector3>();
-        public ArrayOffset<int> tris = new ArrayOffset<int>();
-        public ArrayOffset<Vector2> uvs = new ArrayOffset<Vector2>();
-        public List<BSPFace> faces= new List<BSPFace>();
+        public ArrayOffset<Vector3> verts;
+        public ArrayOffset<int> tris     ;
+        public ArrayOffset<Vector2> uvs  ;
+        public List<BSPFace> faces;        
+        public int vertsCount;
+        public int faceCount;
+        // public int uvsCount;
+        public void Create()
+        {
+            verts = new ArrayOffset<Vector3>(vertsCount);
+            tris = new ArrayOffset<int>(vertsCount*3);
+            uvs = new ArrayOffset<Vector2>(vertsCount);
+                faces= new List<BSPFace>(faceCount);
+        }
     }
     public class BSPMipTexture
     {

@@ -100,7 +100,10 @@ namespace bsp
             //List<RendererCache> cull = new List<RendererCache>();
 
             using (ProfilePrint("GenerateFaceObject"))
-            foreach (var face in facesLump)
+                foreach (BSPFace face in facesLump)
+                    PreGenerateFaceObject(face);
+            
+            foreach (BSPFace face in facesLump)
             {
                 GenerateFaceObject(face);
                 //var r = face.renderer = new RendererCache { renderer = GenerateFaceObject(face) };
@@ -135,6 +138,19 @@ namespace bsp
         }
         public Dictionary<uint, MaterialMesh> mt = new Dictionary<uint, MaterialMesh>();
         Dictionary<ModelMipKey, MipModel> mipModels = new Dictionary<ModelMipKey, MipModel>();
+        void PreGenerateFaceObject(BSPFace face)
+        {
+            MipModel mip2;
+            dtexinfo_t bspTexInfo = texinfoLump[face.texinfo];
+            BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
+            ModelMipKey key = new ModelMipKey(mip, face.model);
+            if (!mipModels.TryGetValue(key, out mip2))
+                mip2 = mipModels[key] = new MipModel() {mip = mip};
+
+            mip2.vertsCount += face.numedges;
+            mip2.faceCount++;
+
+        }
         void GenerateFaceObject(BSPFace face)
         {
             
@@ -142,18 +158,19 @@ namespace bsp
 
             BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
             mip.handled = true;
-            MipModel mip2;
-            var key = new ModelMipKey(mip, face.model);
-            if (!mipModels.TryGetValue(key, out mip2))
-                mip2 = mipModels[key] = new MipModel() {mip = mip};
+            ModelMipKey key = new ModelMipKey(mip, face.model);
+            MipModel mip2 = mipModels[key];
+            if(mip2.verts==null)
+                mip2.Create(); 
+            
             mip2.faces.Add(face);
             ArraySegment<Vector3> verts = mip2.verts.GetNextSegment(face.numedges);
 
             int edgestep = (int) face.firstedge;
             for (int i = 0; i < face.numedges; i++)
             {
-                var edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
-                var vert = surfedgesLump[face.firstedge + i] < 0 ? edge.vert1 : edge.vert2;
+                BSPEdge edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
+                int vert = surfedgesLump[face.firstedge + i] < 0 ? edge.vert1 : edge.vert2;
                 verts[i] = bspExt.ConvertScaleVertex(vertexesLump[vert]);
                 edgestep++;
             }

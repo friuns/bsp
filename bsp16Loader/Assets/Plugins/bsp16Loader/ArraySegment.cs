@@ -23,6 +23,10 @@ namespace bsp
     }
     public class ArrayOffset<T>
     {
+        public ArrayOffset(int cnt)
+        {
+            array = new T[cnt];            
+        }
         public ArraySegment<T> GetNextSegment(int len)
         {
             var segment = new ArraySegment<T>();
@@ -32,7 +36,7 @@ namespace bsp
             offset += len;
             return segment;
         }
-        public T[] array = new T[1000];
+        public T[] array;
         public int offset;
         public T[] ToArray()
         {
