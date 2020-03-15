@@ -20,10 +20,15 @@ namespace bsp
         //public RendererCache renderer;
         public Leaf leaf;
         public BSPModel model;
+        public Vector2[] uv = new Vector2[0];
         public Vector2[] uv2 = new Vector2[0];
+        public Vector4[] uv3 = new Vector4[0];
         public int lightMapW;
         public int lightMapH;
         public Texture2D lightTex;
+        public Texture2D mainTex;
+        public Vector3[] verts;
+        public BSPMipTexture mip;
 
 
         /// <summary>
@@ -61,6 +66,13 @@ namespace bsp
 
 
 
+        }
+        static string[] disable = new string[] { "sky" };
+        static string[] hide = new string[] { "aaatrigger", "black", "white" };
+        
+        public bool disabled
+        {
+            get { return disable.Any(a => string.Equals(mip.name, a, StringComparison.OrdinalIgnoreCase)); }
         }
         public BSPFace()
         {

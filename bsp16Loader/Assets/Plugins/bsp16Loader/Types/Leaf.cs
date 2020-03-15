@@ -1,6 +1,7 @@
 ﻿#region
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,7 +18,9 @@ namespace bsp
         public Vector3 mins;
         public int NumMarkSurfaces;
         public List<Leaf> pvsList;
-        //public RendererCache[] renderers;
+        public MipModel2 mip;
+        public Renderer r;
+        public bool used;
         public int VisOffset;
         public BSPFace[] faces;
 
@@ -30,10 +33,9 @@ namespace bsp
             FirstMarkSurface = lface_index;
             NumMarkSurfaces = num_lfaces;
             AmbientLevels = ambientLevels;
-            //used = false;
-            //pvsList = new List<Leaf>();
-            //faces = new BSPFace[0];
-            //renderers = null;
+            used = false;
+            pvsList = new List<Leaf>();
+            faces = new BSPFace[0];
         }
 
 

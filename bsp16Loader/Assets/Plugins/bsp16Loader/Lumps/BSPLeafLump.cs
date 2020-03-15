@@ -1,9 +1,9 @@
 ﻿namespace bsp
 {
-    public class BSPLeafLump
+    public class  BSPLeafLump
     {
         public Leaf[] leafs;
-
+        public int numLeafs;
         public BSPLeafLump()
         {
         }

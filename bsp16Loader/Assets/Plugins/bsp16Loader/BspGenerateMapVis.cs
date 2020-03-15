@@ -11,8 +11,7 @@ namespace bsp
     public class BspGenerateMapVis : BSP30Map
     {
         //public Texture2D missingtexture;
-        string[] disable = new string[] { "sky" };
-        string[] hide = new string[] { "aaatrigger", "black", "white" };
+        
         //RendererCache[] allRenderers;
         //public Transform debugTransform;
         public static Vector3 playerPos;
@@ -40,142 +39,80 @@ namespace bsp
         }
         //bool loaded;
         public const float scale = Math2.itchToM;
-        public void Update()
+  
+        
+
+        private int BSPlookup(int node)
         {
-            //if (!loaded) return;
-            //if (debugTransform)
-            //    playerPos = debugTransform.position;
-            //if (Input.GetKeyDown(KeyCode.Return))
-            //    RenderAllFaces = !RenderAllFaces;
-            //int pvs = RenderAllFaces ? 0 : WalkBSP();
-            //if (pvs != oldPvs)
-            //    UpdatePvs(pvs);
-            //oldPvs = pvs;
-
+            var b = planesLump[nodesLump[node].planeNum].plane.GetSide(playerPos / scale);
+            return nodesLump[node].children[b ? 1 : 0];
         }
-        //private void UpdatePvs(int id)
-        //{
+        private int WalkBSP(int headnode = 0)
+        {
+            int child = BSPlookup(headnode);
 
-        //for (int i = 0; i < renderers.Length; i++)
-        //    renderers[i].enabled = id == 0;
+            while (child >= 0)
+                child = BSPlookup(child);
 
-        //if (id != 0)
-        //    foreach (Leaf leaf in leafs[id].pvsList)
-        //        AllTrue(leaf.renderers);
-
-        //RefreshRenderers();
-
-        //}
-        //private void RefreshRenderers()
-        //{
-
-        //    for (int i = 0; i < renderers.Length; i++)
-        //        if (renderers[i].enabled != renderers[i].oldEnabled)
-        //            renderers[i].oldEnabled = renderers[i].renderer.enabled = renderers[i].enabled;
-        //}
-        //private static void AllTrue(RendererCache[] rendererCaches)
-        //{
-        //    for (int i = 0; i < rendererCaches.Length; i++)
-        //        rendererCaches[i].enabled = true;
-        //}
-
-        //private int BSPlookup(int node)
-        //{
-        //    var b = planesLump[nodesLump[node].planeNum].plane.GetSide(playerPos / scale);
-        //    return nodesLump[node].children[b ? 1 : 0];
-        //}
-        //private int WalkBSP(int headnode = 0)
-        //{
-        //    int child = BSPlookup(headnode);
-
-        //    while (child >= 0)
-        //        child = BSPlookup(child);
-
-        //    child = -(child + 1);
-        //    return child;
-        //}
+            child = -(child + 1);
+            return child;
+        }
 
         void GenerateVisObjects()
         {
-            //List<RendererCache> cull = new List<RendererCache>();
-
-            using (ProfilePrint("GenerateFaceObject"))
-                foreach (BSPFace face in facesLump)
-                    PreGenerateFaceObject(face);
-            
-            foreach (BSPFace face in facesLump)
+            CombTextures();
+            for (var index = 1; index < leafs.Length; index++)
             {
-                GenerateFaceObject(face);
-                //var r = face.renderer = new RendererCache { renderer = GenerateFaceObject(face) };
-                //if (!pvsDisable && face.leaf != null && face.leaf.used)
-                //{
-                //    //r.renderer.enabled = false;
-                //    cull.Add(face.renderer);
-                //}
-            }
-            using (ProfilePrint("GenerateMesh"))
-            foreach (var a in mipModels.Values)
-                GenerateMesh(a);
-            //renderers = cull.ToArray();
+                var leafRoot = leafs[index];
+                var m = leafRoot.mip = new MipModel2();
 
-            //foreach (Leaf leaf in leafs)
-            //{
-            //    leaf.renderers = new RendererCache[leaf.NumMarkSurfaces];
-            //    for (int j = 0; j < leaf.faces.Length; j++)
-            //    {
-            //        BSPFace f = leaf.faces[j];
-            //        leaf.renderers[j] = f.renderer;
-            //    }
-            //}
+                m.name = leafRoot.print();
+                foreach (var leaf in leafRoot.pvsList)
+                {
+                    for (int i = 0; i < leaf.NumMarkSurfaces; i++)
+                    {
+                        BSPFace f = faces[markSurfaces[leaf.FirstMarkSurface + i]];
+                        if (f.disabled) continue;
+                        m.faceCount++;
+                        m.vertsCount += f.numedges;
+                    }
+                }
+                m.Init();
+
+
+                foreach (var leaf in leafRoot.pvsList)
+                {
+                    for (int i = 0; i < leaf.NumMarkSurfaces; i++)
+                    {
+                        BSPFace f = faces[markSurfaces[leaf.FirstMarkSurface + i]];
+                        if (f.disabled) continue;
+                        GenerateFaceObject(f, m); //adds face to m
+                    }
+                }
+            }
+            foreach (var bspLeaf in leafs)
+            {
+                if (bspLeaf.mip != null)
+                    bspLeaf.r = GenerateMesh(bspLeaf.mip);
+            }
+    
 
         }
         public Material mat;
         public Material matTrans;
-        public class MaterialMesh
+    
+        void GenerateFaceObject(BSPFace face,MipModel2 combined)
         {
-            public Material material;
-            public Mesh mesh;
-        }
-        public Dictionary<uint, MaterialMesh> mt = new Dictionary<uint, MaterialMesh>();
-        Dictionary<ModelMipKey, MipModel> mipModels = new Dictionary<ModelMipKey, MipModel>();
-        void PreGenerateFaceObject(BSPFace face)
-        {
-            MipModel mip2;
-            dtexinfo_t bspTexInfo = texinfoLump[face.texinfo];
-            BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
-            ModelMipKey key = new ModelMipKey(mip, face.model);
-            if (!mipModels.TryGetValue(key, out mip2))
-                mip2 = mipModels[key] = new MipModel() {mip = mip};
 
-            mip2.vertsCount += face.numedges;
-            mip2.faceCount++;
-
-        }
-        void GenerateFaceObject(BSPFace face)
-        {
-            
-            dtexinfo_t bspTexInfo = texinfoLump[face.texinfo];
-
-            BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
-            mip.handled = true;
-            ModelMipKey key = new ModelMipKey(mip, face.model);
-            MipModel mip2 = mipModels[key];
-            if(mip2.verts==null)
-                mip2.Create(); 
-            
-            mip2.faces.Add(face);
-            ArraySegment<Vector3> verts = mip2.verts.GetNextSegment(face.numedges);
-
-            int edgestep = (int) face.firstedge;
-            for (int i = 0; i < face.numedges; i++)
+            combined.faces.Add(face);
+            ArraySegment<Vector3> verts = combined.verts.GetNextSegment(face.numedges);
+            for (int j = 0; j < face.numedges; j++)
             {
-                BSPEdge edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
-                int vert = surfedgesLump[face.firstedge + i] < 0 ? edge.vert1 : edge.vert2;
-                verts[i] = bspExt.ConvertScaleVertex(vertexesLump[vert]);
-                edgestep++;
+                verts[j] = face.verts[j];
             }
+      
 
-            ArraySegment<int> tris = mip2.tris.GetNextSegment((face.numedges - 2) * 3);
+            ArraySegment<int> tris = combined.tris.GetNextSegment((face.numedges - 2) * 3);
             int tristep = 1;
             for (int i = 1; i < face.numedges - 1; i++)
             {
@@ -186,23 +123,32 @@ namespace bsp
                 tristep += 3;
             }
 
-            if (face.lightmapOffset < lightlump.Length)
-                FaceLightmap2(face, verts);
+            
 
-            float scales = mip.width;
-            float scalet = mip.height;
-            ArraySegment<Vector2> uvs = mip2.uvs.GetNextSegment(face.numedges);
-            for (int i = 0; i < face.numedges; i++)
-                uvs[i] = new Vector2((Vector3.Dot(verts[i], bspTexInfo.vec3s) + bspTexInfo.offs) / scales, (Vector3.Dot(verts[i], bspTexInfo.vec3t) + bspTexInfo.offt) / scalet);
+            ArraySegment<Vector2> uvs = combined.uvs.GetNextSegment(face.numedges);
+            for (int j = 0; j < face.numedges; j++)
+                uvs[j] = face.uv[j];
+            
+            ArraySegment<Vector2> uvs2 = combined.uvs2.GetNextSegment(face.numedges);
+            for (int j = 0; j < face.numedges; j++)
+                uvs2[j] = face.uv2[j];
+            
+            
+            ArraySegment<Vector4> uvs3 = combined.uvs3.GetNextSegment(face.numedges);
+            for (int j = 0; j < face.numedges; j++)
+                uvs3[j] = face.uv3[j];
+
+            
 
         }
-        private void FaceLightmap2(BSPFace face, ArraySegment<Vector3> verts)
+        
+        private void FaceLightmap2(BSPFace face,Vector3[] verts)
         {
             dtexinfo_t texinfo = texinfoLump[face.texinfo];
             List<float> fUs = new List<float>();
             List<float> fVs = new List<float>();
 
-            for (int i = 0; i < verts.len; i++)
+            for (int i = 0; i < verts.Length; i++)
             {
                 fUs.Add(Vector3.Dot(texinfo.vec3s, verts[i]) + texinfo.offs);
                 fVs.Add(Vector3.Dot(texinfo.vec3t, verts[i]) + texinfo.offt);
@@ -232,23 +178,13 @@ namespace bsp
             float fMidTexV = (lightH) / 2f;
 
             List<Vector2> UVs2 = TempList<Vector2>.GetTempList();
-            for (int i = 0; i < verts.len; i++)
+            for (int i = 0; i < verts.Length; i++)
             {
                 float fU = Vector3.Dot(verts[i], texinfo.vec3s) + texinfo.offs; // - textureminsW;
                 float fV = Vector3.Dot(verts[i], texinfo.vec3t) + texinfo.offt; // - textureminsH;
-                //UVs2.Add(new Vector2(fU/ scales, fV/scalet));
-
-                //fU += LM_SAMPLE_SIZE >> 1;
-                //fV += LM_SAMPLE_SIZE >> 1;
-
-                //fU /= 128 * LM_SAMPLE_SIZE;
-                //fV /= 128 * LM_SAMPLE_SIZE;
 
                 float fLightMapU = fMidTexU + (fU - fMidPolyU) / 16.0f;
                 float fLightMapV = fMidTexV + (fV - fMidPolyV) / 16.0f;
-
-                //fU/=(extentsW/LM_SAMPLE_SIZE)+1;
-                //fV/=(extentsH/LM_SAMPLE_SIZE)+1;
 
                 float x = fLightMapU / lightW;
                 float y = fLightMapV / lightH;
@@ -266,7 +202,6 @@ namespace bsp
             {
                 
                 if (tempCount + 3 > lightlump.Length) break;
-                //colourarray[k] = new Color32(lightlump[tempCount], lightlump[tempCount + 1], lightlump[tempCount + 2], 100);
 
                 byte r = lightlump[tempCount];
                 byte g = lightlump[tempCount + 1];
@@ -293,84 +228,133 @@ namespace bsp
         {
             return b > 255 ? (byte) 255 : (byte) b;
         }
-        List<LightmapData> lightmapDatas = new List<LightmapData>();
-        void GenerateMesh(MipModel mip)
+        public void CombTextures()
         {
-            Mesh faceMesh = mip.mesh;
-            faceMesh.name = mip.name;
-            faceMesh.vertices = mip.verts.ToArray();
-            faceMesh.SetIndices(mip.tris.ToArray(), MeshTopology.Triangles, 0);
-            faceMesh.uv = mip.uvs.ToArray();
-            faceMesh.RecalculateNormals();
-            var faceObject = new GameObject(mip.name);
-            faceObject.AddComponent<MeshFilter>().mesh = faceMesh;
-            faceObject.transform.SetParent(level, true);
-            var renderer = faceObject.AddComponent<MeshRenderer>();
-
-            foreach (var f in mip.faces)
-                f.transform = faceObject.transform;
-
-            var transparent=false;
-            if (mip.texture == null)
-                renderer.sharedMaterial = mat; 
-            else
+            foreach (var face in faces)
             {
-                Material m = mip.material;
-                transparent = mip.texture.format == TextureFormat.ARGB32;
-                if (m == null)
-                    mip.material = m = new Material(transparent ? matTrans : mat);
-                m.mainTexture = mip.texture;
-                m.mainTexture.name = mip.name;
-                renderer.sharedMaterial = m;
                 
+                int edgestep = (int) face.firstedge;
+                face.verts = new Vector3[face.numedges];
+                for (int i = 0; i < face.numedges; i++)
+                {
+                    BSPEdge edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
+                    int vert = surfedgesLump[face.firstedge + i] < 0 ? edge.vert1 : edge.vert2;
+                    face.verts[i] = bspExt.ConvertScaleVertex(vertexesLump[vert]);
+                    edgestep++;
+                }
+                
+                dtexinfo_t bspTexInfo = texinfoLump[face.texinfo];
+
+                BSPMipTexture mip = texturesLump[bspTexInfo.miptex];
+                mip.handled = true;
+
+                float scales = mip.width;
+                float scalet = mip.height;
+            
+                face.uv = new Vector2[face.numedges];
+                
+                for (int i = 0; i < face.numedges; i++)
+                    face.uv[i] = new Vector2((Vector3.Dot(face.verts[i], bspTexInfo.vec3s) + bspTexInfo.offs) / scales, (Vector3.Dot(face.verts[i], bspTexInfo.vec3t) + bspTexInfo.offt) / scalet);
+                face.mip = mip;
+                face.mainTex = mip.texture;
+            }
+
+
+            {
+                var main_tex = new Texture2D(1, 1);
+                Rect[] rects = main_tex.PackTextures(faces.Select(a => a.mainTex).ToArray(), 1);
+                
+                for (var i = 0; i < faces.Length; i++)
+                {
+                    var face = faces[i];
+                    DestroyImmediate(face.mainTex);
+                    face.uv3 = new Vector4[face.numedges];
+                    var rect = rects[i];
+                    for (int j = 0; j < face.uv.Length; j++)
+                        face.uv3[j] = new Vector4(rect.x, rect.y, rect.width, rect.height);
+                }
+                main_tex.Compress(true);
+                mat.mainTexture = main_tex;
+
+            }
+
+            {
+                foreach (var face in faces)
+                {
+                    if (face.lightmapOffset < lightlump.Length)
+                        FaceLightmap2(face, face.verts);
+                }
 
 
                 //lightmap
-                var inpFaces = mip.faces;
-                Texture2D[] lMs = inpFaces.Select(a => a.lightTex).ToArray();
                 var Lightmap_tex = new Texture2D(1, 1);
-                Rect[] rects = Lightmap_tex.PackTextures(lMs, 1);
-                var UV2 = new List<Vector2>();
-                for (var i = 0; i < inpFaces.Count; i++)
+                Rect[] rects = Lightmap_tex.PackTextures(faces.Select(a => a.lightTex).ToArray(), 1);
+                Lightmap_tex.Compress(true);
+                for (var i = 0; i < faces.Length; i++)
                 {
-                    DestroyImmediate(lMs[i]);
-                    for (int j = 0; j < inpFaces[i].uv2.Length; j++)
-                        UV2.Add(new Vector2(inpFaces[i].uv2[j].x * rects[i].width + rects[i].x, inpFaces[i].uv2[j].y * rects[i].height + rects[i].y));
+                    var bspFace = faces[i];
+                    DestroyImmediate(bspFace.lightTex);
+                    for (int j = 0; j < bspFace.uv2.Length; j++)
+                        bspFace.uv2[j] = new Vector2(bspFace.uv2[j].x * rects[i].width + rects[i].x, bspFace.uv2[j].y * rects[i].height + rects[i].y);
                 }
+                mat.SetTexture("_LightMap", Lightmap_tex);
 
-                m.SetTexture("_LightMap", Lightmap_tex);
-                if (useLightMaps)
-                {
-                    lightmapDatas.Add(new LightmapData { lightmapDir = Lightmap_tex, lightmapColor = Lightmap_tex, shadowMask = Lightmap_tex });
-                    renderer.lightmapIndex = lightmapDatas.Count - 1;
-                    renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
-                }
-                else
-                    renderer.shadowCastingMode = ShadowCastingMode.Off;
-                faceMesh.SetUVs(1, UV2);
-            }
-
-            faceObject.isStatic = true;
-
-            if (disable.Any(a => string.Equals(mip.name, a, StringComparison.OrdinalIgnoreCase)))
-                faceObject.SetActive(false);
-            else
-            {
-                var trigger = hide.Any(a => string.Equals(mip.name, a, StringComparison.OrdinalIgnoreCase));
-                if (trigger)
-                    renderer.sharedMaterials = new Material[0];
-
-                if (!disableTexturesAndColliders)
-                {
-                    Collider c = trigger ? faceObject.AddComponent<BoxCollider>() : (Collider)faceObject.AddComponent<MeshCollider>();
-                    c.isTrigger = trigger;
-                }
-                
-                
-                faceObject.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
+                // if (useLightMaps)
+                // {
+                //     lightmapDatas.Add(new LightmapData {lightmapDir = Lightmap_tex, lightmapColor = Lightmap_tex, shadowMask = Lightmap_tex});
+                //     renderer.lightmapIndex = lightmapDatas.Count - 1;
+                //     renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
+                // }
+                // else
+                //     renderer.shadowCastingMode = ShadowCastingMode.Off;
             }
 
         }
+        List<LightmapData> lightmapDatas = new List<LightmapData>();
+        Renderer GenerateMesh(MipModel2 combined)
+        {
+            Mesh mesh = combined.mesh;
+            mesh.name = combined.name;
+            mesh.vertices = combined.verts.ToArray();
+            mesh.SetIndices(combined.tris.ToArray(), MeshTopology.Triangles, 0);
+            mesh.uv = combined.uvs.ToArray();
+            mesh.uv2 = combined.uvs2.ToArray();
+            mesh.SetUVs(2,combined.uvs3.ToArray());
+            mesh.RecalculateNormals();
+            var g = new GameObject(combined.name);
+            g.AddComponent<MeshFilter>().mesh = mesh;
+            g.transform.SetParent(level, true);
+            var renderer = g.AddComponent<MeshRenderer>();
+            renderer.material = mat;
+            foreach (var f in combined.faces)
+                f.transform = g.transform;
 
+
+            g.isStatic = true;
+
+            
+            // else
+            // {
+            //     var trigger = hide.Any(a => string.Equals(combined.name, a, StringComparison.OrdinalIgnoreCase));
+            //     if (trigger)
+            //         renderer.sharedMaterials = new Material[0];
+            //
+            //     if (!disableTexturesAndColliders)
+            //     {
+            //         Collider c = trigger ? g.AddComponent<BoxCollider>() : (Collider)g.AddComponent<MeshCollider>();
+            //         c.isTrigger = trigger;
+            //     }
+            //     
+            //     
+            //     g.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
+            // }
+            
+            return renderer;
+        }
+        [Obsolete]
+        public new Renderer renderers;
+        [Obsolete]
+        public new Renderer renderer;
     }
+
 }

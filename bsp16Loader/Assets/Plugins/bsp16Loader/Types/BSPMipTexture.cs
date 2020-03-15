@@ -4,41 +4,35 @@ using UnityEngine;
 
 namespace bsp
 {
-    public struct ModelMipKey
-    {
-        public BSPMipTexture tex;
-        public BSPModel model;
-
-        public ModelMipKey(BSPMipTexture Tex, BSPModel Model)
-        {
-            tex = Tex;
-            model = Model;
-        }
-    }
-    public class MipModel
+   
+    public class MipModel2
     {
         // public MipModel(int verts, int tris, int uvs)
         // {
         //     
         // }
-        public string name {get {return mip.name; } }
-        public Texture2D  texture {get {return mip.texture; } }
-        public BSPMipTexture mip;
+        public string name;
+        // public Texture2D  texture {get {return mip.texture; } }
+        // public BSPMipTexture mip;
         public Mesh mesh = new Mesh();
         public Material material;
         public ArrayOffset<Vector3> verts;
         public ArrayOffset<int> tris     ;
         public ArrayOffset<Vector2> uvs  ;
+        public ArrayOffset<Vector2> uvs2  ;
+        public ArrayOffset<Vector4> uvs3  ;
         public List<BSPFace> faces;        
         public int vertsCount;
         public int faceCount;
         // public int uvsCount;
-        public void Create()
+        public void Init()
         {
             verts = new ArrayOffset<Vector3>(vertsCount);
-            tris = new ArrayOffset<int>(vertsCount*3);
+            tris = new ArrayOffset<int>(vertsCount * 3);
             uvs = new ArrayOffset<Vector2>(vertsCount);
-                faces= new List<BSPFace>(faceCount);
+            uvs2 = new ArrayOffset<Vector2>(vertsCount);
+            uvs3 = new ArrayOffset<Vector4>(vertsCount);
+            faces = new List<BSPFace>(faceCount);
         }
     }
     public class BSPMipTexture
