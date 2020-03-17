@@ -9,11 +9,15 @@ namespace bsp
         {
             array = new T[cnt];            
         }
+        public void Add(T d)
+        {
+            array[offset++] = d;
+        }
+        
         public void Add(T[] d)
         {
             for (int i = 0; i < d.Length; i++)
                 array[offset++] = d[i];
-            
         }
         
         public T[] array;

@@ -18,7 +18,6 @@ namespace bsp
         public Vector3 mins;
         public int NumMarkSurfaces;
         public List<Leaf> pvsList;
-        public MipModel2 mip;
         public Renderer r;
         public bool used;
         public int VisOffset;

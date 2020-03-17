@@ -14,10 +14,12 @@ namespace bsp
         public Vector3 vOrigin;                  // Coordinates to move the // coordinate system
         public Int32[] nodes;// [0]index of first BSP node, [1]index of the first Clip node, [2]index of the second Clip node, [3]  usually zero
 
-        public Int32 numLeafs;// number of BSP leaves
+        public Int32 numLeafs;// number of BSP leaves VisLeaf
         public Int32 indexOfFirstFace, numberOfFaces;// Index and count into faces lump
         public Bounds bounds = new Bounds();
         public Vector3 pos;
+        public Renderer render;
+        // public CombinedModel combined;
 
         public int node { get { return nodes[0]; } }
         public BSPModel()

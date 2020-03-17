@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine.Rendering;
 using Random = System.Random;
 
@@ -11,6 +12,11 @@ namespace bsp
 {
     public class BspGenerateMapVis : BSP30Map
     {
+        public override void Awake()
+        {
+            base.Awake();
+            _BspGenerateMapVis = this;
+        }
         //public Texture2D missingtexture;
         
         //RendererCache[] allRenderers;
@@ -57,6 +63,8 @@ namespace bsp
         public Leaf oldWalkBsp;
         public void Update()
         {
+            if (settings.disablePvs || planesLump == null) return;
+                
             var i = WalkBSP();
             Leaf walkBsp = leafs[i];
 
@@ -72,12 +80,14 @@ namespace bsp
         {
             using (ProfilePrint("CombTextures"))
                 CombTextures();
+            
+            if(!settings.disablePvs)
             using (ProfilePrint("leafsCollect"))
             for (var index = 1; index < leafs.Length; index++)
             {
                 var leafRoot = leafs[index];
-                var m = leafRoot.mip = new MipModel2();
-
+                var m  = new CombinedModel();
+                
                 m.name = leafRoot.print();
                 foreach (var leaf in leafRoot.pvsList)
                 {
@@ -91,60 +101,74 @@ namespace bsp
                     }
                 }
                 m.Init();
-
+                // Parallel.ForEach(leafRoot.pvsList, (leaf,_,ix) =>  
                 foreach (var leaf in leafRoot.pvsList)
                 {
+                    
                     for (int i = 0; i < leaf.NumMarkSurfaces; i++)
                     {
+                        
                         BSPFace f = faces[markSurfaces[leaf.FirstMarkSurface + i]];
                         if (f.mip.disabled) continue;
-                        GenerateFaceObject(f, m); //adds face to m
+                        m.AddFace(f); //adds face to m
                     }
+                    
                 }
+                leafRoot.r = m.GenerateMesh();
+                leafRoot.r.enabled = false;
+                // );
             }
-            using (ProfilePrint("leafsCreate"))
-            foreach (var bspLeaf in leafs)
+            // using (ProfilePrint("leafsCreate"))
+            //     foreach (var bspLeaf in leafs)
+            //     {
+            //         if (bspLeaf.mip != null)
+            //         {
+            //             bspLeaf.r = bspLeaf.mip.GenerateMesh(this);
+            //             bspLeaf.r.enabled = false;
+            //             // bspLeaf.mip = null;
+            //         }
+            //     }
+
+
+            for (var index = 0; index < models.Length; index++)
             {
-                if (bspLeaf.mip != null)
-                {
-                    bspLeaf.r = GenerateMesh(bspLeaf.mip);
-                    bspLeaf.r.enabled = false;
-                    // bspLeaf.mip = null;
-                }
+                var model = models[index];
+                CombinedModel combined = new CombinedModel();
+                for (int i = model.indexOfFirstFace; i < model.indexOfFirstFace + model.numberOfFaces; i++)
+                    if (!faces[i].mip.disabled)
+                        combined.PreAddFace(faces[i]);
+                combined.Init();
+                for (int i = model.indexOfFirstFace; i < model.indexOfFirstFace + model.numberOfFaces; i++)
+                    if (!faces[i].mip.disabled)
+                        combined.AddFace(faces[i]);
+                model.render = combined.GenerateMesh();
+
+                if (index == 0 && !settings.disablePvs)
+                    model.render.enabled = false;
+
+                model.render.gameObject.AddComponent<MeshCollider>();
+                model.render.gameObject.layer = Layer.level;
+                
             }
-    
+            //
+            // using (ProfilePrint("leafsCreate"))
+            // foreach (var bspLeaf in leafs)
+            // {
+            //     if (bspLeaf.combined != null)
+            //     {
+            //         bspLeaf.r = bspLeaf.combined.GenerateMesh(this);
+            //         bspLeaf.r.enabled = false;
+            //         // bspLeaf.mip = null;
+            //     }
+            // }
+            foreach (var a in texturesLump)
+                DestroyImmediate(a.texture);
 
         }
         public Material mat;
         public Material matTrans;
     
-        void GenerateFaceObject(BSPFace face,MipModel2 combined)
-        {
-            // combined.faces.array[combined.faces.offset++] = face;
-            
-            var offset = combined.verts.offset;
-            combined.verts.Add(face.verts);
-
-            var tris = combined.tris;
-            int tristep = 1;
-            for (int i = 1; i < face.numedges - 1; i++)
-            {
-                var i2 = i + offset;
-                tris.array[tris.offset+tristep - 1] = offset;
-                tris.array[tris.offset+tristep] = i2;
-                tris.array[tris.offset+tristep + 1] = i2 + 1;
-                tristep += 3;
-            }
-
-
-            tris.offset += (face.numedges - 2) * 3;
-            
-            
-            combined.uvs.Add(face.uv);
-            combined.uvs2.Add(face.uv2);
-            combined.uvs3.Add(face.uv3);
-
-        }
+        
         
         private void FaceLightmap2(BSPFace face)
         {
@@ -238,18 +262,17 @@ namespace bsp
         public void CombTextures()
         {
             foreach (var face in faces)
+            // Parallel.ForEach(faces, face =>
             {
                 
                 int edgestep = (int) face.firstedge;
                 face.verts = new Vector3[face.numedges];
+                
                 for (int i = 0; i < face.numedges; i++)
                 {
                     BSPEdge edge = edgesLump[Mathf.Abs(surfedgesLump[edgestep])];
                     int vert = surfedgesLump[face.firstedge + i] < 0 ? edge.vert1 : edge.vert2;
                     face.verts[i] = bspExt.ConvertScaleVertex(vertexesLump[vert]);
-                    face.verts[i].y += UnityEngine.Random.Range(0, 10);
-                    face.verts[i].x += UnityEngine.Random.Range(0, 10);
-                    face.verts[i].z += UnityEngine.Random.Range(0, 10);
                     edgestep++;
                 }
                 
@@ -267,14 +290,14 @@ namespace bsp
                     face.uv[i] = new Vector2((Vector3.Dot(face.verts[i], bspTexInfo.vec3s) + bspTexInfo.offs) / scales, (Vector3.Dot(face.verts[i], bspTexInfo.vec3t) + bspTexInfo.offt) / scalet);
                 face.mip = mip;
                 face.mainTex = mip.texture;
+                
             }
-
+            // );
 
             {
                 var main_tex = new Texture2D(1, 1);
                 Rect[] rects = main_tex.PackTextures(faces.Select(a => a.mainTex).ToArray(), 1);
-                foreach (var a in texturesLump)
-                    DestroyImmediate(a.texture);
+                
                 
                 for (var i = 0; i < faces.Length; i++)
                 {
@@ -311,56 +334,12 @@ namespace bsp
                 }
                 mat.SetTexture("_LightMap", Lightmap_tex);
 
-                // if (useLightMaps)
-                // {
-                //     lightmapDatas.Add(new LightmapData {lightmapDir = Lightmap_tex, lightmapColor = Lightmap_tex, shadowMask = Lightmap_tex});
-                //     renderer.lightmapIndex = lightmapDatas.Count - 1;
-                //     renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
-                // }
-                // else
-                //     renderer.shadowCastingMode = ShadowCastingMode.Off;
+           
             }
 
         }
         
-        Renderer GenerateMesh(MipModel2 combined)
-        {
-            Mesh mesh = combined.mesh;
-            mesh.name = combined.name;
-            mesh.vertices = combined.verts.ToArray();
-            mesh.SetIndices(combined.tris.ToArray(), MeshTopology.Triangles, 0);
-            mesh.uv = combined.uvs.ToArray();
-            mesh.uv2 = combined.uvs2.ToArray();
-            mesh.SetUVs(2,combined.uvs3.ToArray());
-            // AutoWeld.Weld(mesh,.1f,100);
-            mesh.RecalculateNormals();
-            // mesh.Optimize();
-            var g = new GameObject(combined.name);
-            g.AddComponent<MeshFilter>().mesh = mesh;
-            g.transform.SetParent(level, true);
-            var renderer = g.AddComponent<MeshRenderer>();
-            renderer.material = mat;
-            g.isStatic = true;
-
-            
-            // else
-            // {
-            //     var trigger = hide.Any(a => string.Equals(combined.name, a, StringComparison.OrdinalIgnoreCase));
-            //     if (trigger)
-            //         renderer.sharedMaterials = new Material[0];
-            //
-            //     if (!disableTexturesAndColliders)
-            //     {
-            //         Collider c = trigger ? g.AddComponent<BoxCollider>() : (Collider)g.AddComponent<MeshCollider>();
-            //         c.isTrigger = trigger;
-            //     }
-            //     
-            //     
-            //     g.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
-            // }
-            
-            return renderer;
-        }
+        
         [Obsolete]
         public new Renderer renderers;
         [Obsolete]
