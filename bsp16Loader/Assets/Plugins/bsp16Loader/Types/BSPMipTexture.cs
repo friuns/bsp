@@ -21,33 +21,39 @@ namespace bsp
         public ArrayOffset<Vector2> uvs  ;
         public ArrayOffset<Vector2> uvs2  ;
         public ArrayOffset<Vector4> uvs3  ;
-        public List<BSPFace> faces;        
+        // public ArrayOffset<BSPFace> faces;        
         public int vertsCount;
         public int faceCount;
+        public int trianglesCount;
         // public int uvsCount;
         public void Init()
         {
             verts = new ArrayOffset<Vector3>(vertsCount);
-            tris = new ArrayOffset<int>(vertsCount * 3);
+            tris = new ArrayOffset<int>(trianglesCount); //vertsCount * 3
             uvs = new ArrayOffset<Vector2>(vertsCount);
             uvs2 = new ArrayOffset<Vector2>(vertsCount);
             uvs3 = new ArrayOffset<Vector4>(vertsCount);
-            faces = new List<BSPFace>(faceCount);
+            // faces = new BSPFace[faceCount];
         }
     }
     public class BSPMipTexture
     {
+        static string[] disable = new string[] { "sky" };
+        static string[] hide = new string[] { "aaatrigger", "black", "white" };
+        
         public string name;
         public Int32 width;
         public Int32 height;
         public UInt32[] offset;
         public Texture2D texture;
         public bool handled;
+        public bool disabled;
         public BSPMipTexture(string Name, UInt32 Width, UInt32 Height, UInt32[] offset)
         {
             
             //this.name = RemoveControlCharacters(Name);
             this.name = Name;
+            disabled = disable.Any(a => string.Equals(name, a, StringComparison.OrdinalIgnoreCase));
             this.width = (int)Width;
             this.height = (int)Height;
             this.offset = offset;

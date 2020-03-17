@@ -2,40 +2,20 @@
 
 namespace bsp
 {
-    public struct ArraySegment<T>
-    {
-        public T[] array;
-        public int offset;
-        public int len;
-        public T this[int index]
-        {
-            get
-            {
-                if (index > len) throw new ArgumentOutOfRangeException(index + ">" + len);
-                return array[offset + index];
-            }
-            set
-            {
-                if (index > len) throw new ArgumentOutOfRangeException(index + ">" + len);
-                array[offset + index] = value;
-            }
-        }
-    }
+    
     public class ArrayOffset<T>
     {
         public ArrayOffset(int cnt)
         {
             array = new T[cnt];            
         }
-        public ArraySegment<T> GetNextSegment(int len)
+        public void Add(T[] d)
         {
-            var segment = new ArraySegment<T>();
-            segment.array = array;
-            segment.offset = offset;
-            segment.len = len;
-            offset += len;
-            return segment;
+            for (int i = 0; i < d.Length; i++)
+                array[offset++] = d[i];
+            
         }
+        
         public T[] array;
         public int offset;
         public T[] ToArray()

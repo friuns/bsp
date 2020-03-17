@@ -16,6 +16,7 @@ namespace bsp
         public UInt16 texinfo; // Index of the texture info structure
         public byte[] styles;   // Specify lighting styles
         public UInt32 lightmapOffset; // Offsets into the raw lightmap data
+        [Obsolete]
         public Transform transform;
         //public RendererCache renderer;
         public Leaf leaf;
@@ -67,13 +68,9 @@ namespace bsp
 
 
         }
-        static string[] disable = new string[] { "sky" };
-        static string[] hide = new string[] { "aaatrigger", "black", "white" };
         
-        public bool disabled
-        {
-            get { return disable.Any(a => string.Equals(mip.name, a, StringComparison.OrdinalIgnoreCase)); }
-        }
+        
+        
         public BSPFace()
         {
 
