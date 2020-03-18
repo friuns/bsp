@@ -308,8 +308,7 @@ namespace bsp
                         face.uv3[j] = new Vector4(rect.x, rect.y, rect.width, rect.height);
                 }
                 main_tex.Compress(true);
-                mat.mainTexture = main_tex;
-
+                matTrans.mainTexture = mat.mainTexture = main_tex;
             }
 
             {
