@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace bsp
 {
@@ -39,13 +40,11 @@ public class CombinedModel
     }
     public void AddFace(BSPFace face)
     {
-        var combined = this;
-        // combined.faces.array[combined.faces.offset++] = face;
+        // faces.array[faces.offset++] = face;
 
-        var offset = combined.verts.offset;
-        combined.verts.Add(face.verts);
+        var offset = verts.offset;
+        verts.Add(face.verts);
 
-        var tris = combined.tris;
         int tristep = 1;
         for (int i = 1; i < face.numedges - 1; i++)
         {
@@ -60,9 +59,9 @@ public class CombinedModel
         tris.offset += (face.numedges - 2) * 3;
 
 
-        combined.uvs.Add(face.uv);
-        combined.uvs2.Add(face.uv2);
-        combined.uvs3.Add(face.uv3);
+        uvs.Add(face.uv);
+        uvs2.Add(face.uv2);
+        uvs3.Add(face.uv3);
 
         if (!inited)
             material = face.mainTex.format == TextureFormat.ARGB32 ? bsWeb._BspGenerateMapVis.matTrans : bsWeb._BspGenerateMapVis.mat;
@@ -88,13 +87,14 @@ public class CombinedModel
         g.transform.SetParent(bsWeb._BspGenerateMapVis.level, true);
         var renderer = g.AddComponent<MeshRenderer>();
         renderer.material = material;
+        renderer.shadowCastingMode = ShadowCastingMode.Off;
         g.isStatic = true;
         
     
             
         // else
         // {
-        //     var trigger = hide.Any(a => string.Equals(combined.name, a, StringComparison.OrdinalIgnoreCase));
+        //     var trigger = hide.Any(a => string.Equals(name, a, StringComparison.OrdinalIgnoreCase));
         //     if (trigger)
         //         renderer.sharedMaterials = new Material[0];
         //

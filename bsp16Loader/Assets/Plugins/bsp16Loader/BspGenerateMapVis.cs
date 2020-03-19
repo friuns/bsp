@@ -132,23 +132,31 @@ namespace bsp
 
             for (var index = 0; index < models.Length; index++)
             {
-                var model = models[index];
-                CombinedModel combined = new CombinedModel();
-                for (int i = model.indexOfFirstFace; i < model.indexOfFirstFace + model.numberOfFaces; i++)
-                    if (!faces[i].mip.disabled)
-                        combined.PreAddFace(faces[i]);
-                combined.Init();
-                for (int i = model.indexOfFirstFace; i < model.indexOfFirstFace + model.numberOfFaces; i++)
-                    if (!faces[i].mip.disabled)
-                        combined.AddFace(faces[i]);
-                model.render = combined.GenerateMesh();
+                BSPModel model = models[index];
+                var limit = 64000 / 6;
+                for (int j = 0; j <= model.numberOfFaces; j += limit)
+                {
+                    CombinedModel combined = new CombinedModel();
 
-                if (index == 0 && !settings.disablePvs)
-                    model.render.enabled = false;
+                    var start = model.indexOfFirstFace+j;
+                    var end = Mathf.Min(model.indexOfFirstFace + j + limit, model.indexOfFirstFace + model.numberOfFaces);
 
-                model.render.gameObject.AddComponent<MeshCollider>();
-                model.render.gameObject.layer = Layer.level;
-                
+                    for (int i = start; i < end; i++)
+                        if (!faces[i].mip.disabled)
+                            combined.PreAddFace(faces[i]);
+                    combined.Init();
+                    for (int i = start; i < end; i++)
+                        if (!faces[i].mip.disabled)
+                            combined.AddFace(faces[i]);
+                    model.render = combined.GenerateMesh();
+
+                    if (index == 0 && !settings.disablePvs)
+                        model.render.enabled = false;
+
+                    model.render.gameObject.AddComponent<MeshCollider>();
+                    model.render.gameObject.layer = Layer.level;
+
+                }
             }
             //
             // using (ProfilePrint("leafsCreate"))
