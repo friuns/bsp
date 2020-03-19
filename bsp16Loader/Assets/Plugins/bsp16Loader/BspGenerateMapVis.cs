@@ -170,12 +170,15 @@ namespace bsp
     
         
         
-        private void FaceLightmap2(BSPFace face)
+        private void FaceLightmap2(BSPFace face,Vector3[] verts)
         {
-            var verts = face.verts;
             dtexinfo_t texinfo = texinfoLump[face.texinfo];
-            var fUs = TempArray<float>.GetArray(verts.Length);
-            var fVs = TempArray<float>.GetArray(verts.Length);
+            // List<float> fUs = new List<float>();
+            // List<float> fVs = new List<float>();
+            var fUs = new float[verts.Length];
+            var fVs = new float[verts.Length];
+
+            
 
             for (int i = 0; i < verts.Length; i++)
             {
@@ -215,14 +218,14 @@ namespace bsp
                 float fLightMapU = fMidTexU + (fU - fMidPolyU) / 16.0f;
                 float fLightMapV = fMidTexV + (fV - fMidPolyV) / 16.0f;
 
-                float x = fLightMapU / lightW;
+                float x = fLightMapU / lightW;  
                 float y = fLightMapV / lightH;
 
                 UVs2[i] = new Vector2(x, y);
             }
 
-            Texture2D lightTex = TextureManager.Texture2D(lightW, lightH, TextureFormat.RGB24, false);
 
+            Texture2D lightTex = TextureManager.Texture2D(lightW, lightH, TextureFormat.RGB24, false);
             Color32[] colourarray = TempArray<Color32>.GetArray(lightW * lightH);
             int tempCount = (int)face.lightmapOffset;
 
@@ -235,15 +238,17 @@ namespace bsp
                 byte g = lightlump[tempCount + 1];
                 byte b = lightlump[tempCount + 2];
                 
+                
                 colourarray[k] = new Color32(Pow(r + 128), Pow(g+128), Pow(b+128), 255);
+                
+                // colourarray[k] = new Color32(Clamp(r + 128), Clamp(g + 128), Clamp(b + 128), 255);
+                // colourarray[k] = new Color32((byte)(Mathf.Pow(colourarray[k].r / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].g / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].b / 255.0f, 2) * 255), 255);
 
 
                 tempCount += 3;
             }
-            
 
             lightTex.SetPixels32(colourarray);
-            
             lightTex.filterMode = FilterMode.Bilinear;
             lightTex.wrapMode = TextureWrapMode.Clamp;
             lightTex.Apply();
@@ -252,9 +257,14 @@ namespace bsp
 
             face.lightTex = lightTex;
         }
+        
+        public static byte Clamp(int b)
+        {
+            return b > 255 ? (byte) 255 : (byte) b;
+        }
         private byte Pow(int f)
         {
-            if (f == 255) return 255;
+            if (f > 255) return 255;
             // var g = f > 255 ? 255 : f;
             return (byte) (f * f / 255);
         }
@@ -316,7 +326,7 @@ namespace bsp
                 foreach (var face in faces)
                 {
                     if (face.lightmapOffset < lightlump.Length)
-                        FaceLightmap2(face);
+                        FaceLightmap2(face,face.verts);
                 }
 
 

@@ -36,7 +36,6 @@ SubShader {
                 float4 vertex  : POSITION;
                 float2 texcoord : TEXCOORD0;
 				float2 texcoord1 : TEXCOORD1;
-                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f {
@@ -44,8 +43,7 @@ SubShader {
                 float2 texcoord : TEXCOORD0;
 				float2 texcoord1 : TEXCOORD1;
                 UNITY_FOG_COORDS(3)
-                UNITY_VERTEX_OUTPUT_STEREO
-					 SHADOW_COORDS(2) 
+			    SHADOW_COORDS(2) 
             };
 
             sampler2D _MainTex;
@@ -56,8 +54,6 @@ SubShader {
             v2f vert (appdata_t v)
             {
                 v2f o;
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
 				o.texcoord1 = TRANSFORM_TEX(v.texcoord1, _LightMap);
