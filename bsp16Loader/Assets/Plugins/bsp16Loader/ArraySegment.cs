@@ -11,20 +11,20 @@ namespace bsp
         }
         public void Add(T d)
         {
-            array[offset++] = d;
+            array[length++] = d;
         }
         
         public void Add(T[] d)
         {
             for (int i = 0; i < d.Length; i++)
-                array[offset++] = d[i];
+                array[length++] = d[i];
         }
         
         public T[] array;
-        public int offset;
+        public int length;
         public T[] ToArray()
         {
-            Array.Resize(ref array, offset);
+            Array.Resize(ref array, length);
             return array;
         }
     }

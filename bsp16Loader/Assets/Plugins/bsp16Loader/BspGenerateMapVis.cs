@@ -68,11 +68,11 @@ namespace bsp
             var i = WalkBSP();
             Leaf walkBsp = leafs[i];
 
-            if (oldWalkBsp != walkBsp && walkBsp.r != null)
+            if (oldWalkBsp != walkBsp && walkBsp.renderer != null)
             {
-                walkBsp.r.enabled = true;
+                walkBsp.renderer.enabled = true;
                 if(oldWalkBsp!=null)
-                    oldWalkBsp.r.enabled = false;
+                    oldWalkBsp.renderer.enabled = false;
                 oldWalkBsp = walkBsp;
             }
         }
@@ -94,7 +94,7 @@ namespace bsp
                     for (int i = 0; i < leaf.NumMarkSurfaces; i++)
                     {
                         BSPFace f = faces[markSurfaces[leaf.FirstMarkSurface + i]];
-                        if (f.mip.disabled) continue;
+                        // if (f.mip.disabled) continue;
                         m.faceCount++;
                         m.vertsCount += f.numedges;
                         m.trianglesCount += (f.numedges - 2) * 3;
@@ -109,32 +109,23 @@ namespace bsp
                     {
                         
                         BSPFace f = faces[markSurfaces[leaf.FirstMarkSurface + i]];
-                        if (f.mip.disabled) continue;
+                        // if (f.mip.disabled) continue;
                         m.AddFace(f); //adds face to m
                     }
                     
                 }
-                leafRoot.r = m.GenerateMesh();
-                leafRoot.r.enabled = false;
+                leafRoot.renderer = m.GenerateMesh();
+                leafRoot.renderer.enabled = false;
                 // );
             }
-            // using (ProfilePrint("leafsCreate"))
-            //     foreach (var bspLeaf in leafs)
-            //     {
-            //         if (bspLeaf.mip != null)
-            //         {
-            //             bspLeaf.r = bspLeaf.mip.GenerateMesh(this);
-            //             bspLeaf.r.enabled = false;
-            //             // bspLeaf.mip = null;
-            //         }
-            //     }
+        
 
 
             for (var index = 0; index < models.Length; index++)
             {
                 BSPModel model = models[index];
                 var limit = 64000 / 6;
-                for (int j = 0; j <= model.numberOfFaces; j += limit)
+                for (int j = 0; j < model.numberOfFaces; j += limit)
                 {
                     CombinedModel combined = new CombinedModel();
 
@@ -155,22 +146,14 @@ namespace bsp
 
                     model.render.gameObject.AddComponent<MeshCollider>();
                     model.render.gameObject.layer = Layer.level;
+                    model.render.gameObject.name = "Model:" + index;
 
                 }
             }
-            //
-            // using (ProfilePrint("leafsCreate"))
-            // foreach (var bspLeaf in leafs)
-            // {
-            //     if (bspLeaf.combined != null)
-            //     {
-            //         bspLeaf.r = bspLeaf.combined.GenerateMesh(this);
-            //         bspLeaf.r.enabled = false;
-            //         // bspLeaf.mip = null;
-            //     }
-            // }
-            foreach (var a in texturesLump)
-                DestroyImmediate(a.texture);
+   
+            if(!Application.isEditor)
+                foreach (var a in texturesLump)
+                    DestroyImmediate(a.texture);
 
         }
         public Material mat;
@@ -181,8 +164,7 @@ namespace bsp
         private void FaceLightmap2(BSPFace face,Vector3[] verts)
         {
             dtexinfo_t texinfo = texinfoLump[face.texinfo];
-            // List<float> fUs = new List<float>();
-            // List<float> fVs = new List<float>();
+
             var fUs = new float[verts.Length];
             var fVs = new float[verts.Length];
 
@@ -234,7 +216,7 @@ namespace bsp
 
 
             Texture2D lightTex = TextureManager.Texture2D(lightW, lightH, TextureFormat.RGB24, false);
-            Color32[] colourarray = TempArray<Color32>.GetArray(lightW * lightH);
+            Color32[] colourarray = TempArray<Color32>.GetArray(lightW * lightH, 1);
             int tempCount = (int)face.lightmapOffset;
 
             for (int k = 0; k < lightW * lightH; k++)
@@ -248,10 +230,6 @@ namespace bsp
                 
                 
                 colourarray[k] = new Color32(Pow(r + 128), Pow(g+128), Pow(b+128), 255);
-                
-                // colourarray[k] = new Color32(Clamp(r + 128), Clamp(g + 128), Clamp(b + 128), 255);
-                // colourarray[k] = new Color32((byte)(Mathf.Pow(colourarray[k].r / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].g / 255.0f, 2) * 255), (byte)(Mathf.Pow(colourarray[k].b / 255.0f, 2) * 255), 255);
-
 
                 tempCount += 3;
             }
@@ -325,7 +303,7 @@ namespace bsp
                     for (int j = 0; j < face.uv.Length; j++)
                         face.uv3[j] = new Vector4(rect.x, rect.y, rect.width, rect.height);
                 }
-                main_tex.Compress(true);
+                // main_tex.Compress(true);
                 matTrans.mainTexture = mat.mainTexture = main_tex;
             }
 
@@ -341,7 +319,7 @@ namespace bsp
                 //lightmap
                 var Lightmap_tex = new Texture2D(1, 1);
                 Rect[] rects = Lightmap_tex.PackTextures(faces.Select(a => a.lightTex).ToArray(), 1);
-                Lightmap_tex.Compress(true);
+                // Lightmap_tex.Compress(true);
                 for (var i = 0; i < faces.Length; i++)
                 {
                     var bspFace = faces[i];

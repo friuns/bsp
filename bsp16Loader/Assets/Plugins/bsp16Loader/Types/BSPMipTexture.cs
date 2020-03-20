@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace bsp
@@ -16,21 +17,58 @@ public class BSPMipTexture
     public Texture2D texture;
     public bool handled;
     public bool disabled;
+    public bool hidden;
+    public bool transparent;
+    
     public BSPMipTexture(string Name, UInt32 Width, UInt32 Height, UInt32[] offset)
     {
 
         //this.name = RemoveControlCharacters(Name);
-        this.name = Name;
+        name = Name;
+        transparent = name.StartsWith("{");
         disabled = disable.Any(a => string.Equals(name, a, StringComparison.OrdinalIgnoreCase));
-        this.width = (int) Width;
-        this.height = (int) Height;
+        hidden = hide.Any(a=> string.Equals(name, a, StringComparison.OrdinalIgnoreCase));
+        width = (int) Width;
+        height = (int) Height;
         this.offset = offset;
     }
-
-    public int PixelCount()
+    static Color32[] colourPalette = new Color32[256];
+    
+    public void ReadTexture(long textureOffset, BinaryReader BinaryReader)
     {
-        return (int) (width * height);
+        
+        BinaryReader.BaseStream.Position = ((width * height / 64) + offset[3] + textureOffset + 2);
+        
+        
+        for (int j = 0; j < 256; j++)
+        {
+
+            Color32 c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
+            if (j == 255)
+                c.r = c.b = c.g = c.a = 0;
+
+            colourPalette[j] = c;
+        }
+
+        
+
+        BinaryReader.BaseStream.Position = (textureOffset + offset[0]);
+        int NumberOfPixels = height * width;
+
+        Color32[] colour = TempArray<Color32>.GetArray(NumberOfPixels, 1);
+        for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
+        {
+            var i = BinaryReader.ReadByte();
+            colour[currentPixel] = colourPalette[i];
+        }
+        texture = TextureManager.Texture2D(width, height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24 /*,!transparent*/);
+        texture.SetPixels32(colour);
+//                if (transparent)
+//                    texture.filterMode = FilterMode.Point;
+        texture.Apply();
     }
+    
+    
     public override string ToString()
     {
         return name;

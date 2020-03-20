@@ -10,7 +10,6 @@ namespace bsp
 {
     public partial class BSP30Map : Base
     {
-        internal bool disableTexturesAndColliders = false;
         private int NumTexLoadFromWad;
         private new BinaryReader br;
         public BSPHeader header;
@@ -81,7 +80,7 @@ namespace bsp
             br.BaseStream.Dispose();
 
             using (ProfilePrint("load textures from wad"))
-                if (NumTexLoadFromWad > 0 && !disableTexturesAndColliders)
+                if (NumTexLoadFromWad > 0)
                 {
                     Debug.Log2("Reading in textures from wad");
                     yield return findNullTextures();
@@ -246,7 +245,7 @@ namespace bsp
                 miptex.texture = null;
                 return miptex;
             }
-            ReadTexture(miptex, textureOffset, stream);
+            miptex.ReadTexture(textureOffset, stream);
 
             return miptex;
         }
@@ -265,8 +264,7 @@ namespace bsp
             {
                 int textureOffset = BSPMIPTEXOFFSET[indexOfTex];
                 br.BaseStream.Position = textureOffset;
-                texturesLump[indexOfTex] = new BSPMipTexture(br.LoadCleanString(16), br.ReadUInt32(), br.ReadUInt32(), br.ReadUInt32Array(4));
-                var mip = texturesLump[indexOfTex];
+                var mip = texturesLump[indexOfTex] = new BSPMipTexture(br.LoadCleanString(16), br.ReadUInt32(), br.ReadUInt32(), br.ReadUInt32Array(4));
                 if (mip.offset[0] == 0)
                 {
                     NumTexLoadFromWad++;
@@ -276,59 +274,12 @@ namespace bsp
                 //Debug.Log2("starting to read in texture " + mip.name);
                 try
                 {
-                    ReadTexture(mip, textureOffset, br);
+                    mip.ReadTexture(textureOffset, br);
                 }catch(Exception e){UnityEngine.Debug.LogException(e);}
             }
             Debug.Log2("finished reading textures");
         }
-        private void ReadTexture(BSPMipTexture mip, long textureOffset, BinaryReader BinaryReader)
-        {
-            if (disableTexturesAndColliders)
-                mip.texture = Texture2D.whiteTexture;
-            else
-            {
-                BinaryReader.BaseStream.Position = ((mip.width * mip.height / 64) + mip.offset[3] + textureOffset + 2);
-                Color[] colourPalette = new Color[256];
-                bool transparent = false;
-                for (int j = 0; j < 256; j++)
-                {
-
-                    Color32 c = new Color32(BinaryReader.ReadByte(), BinaryReader.ReadByte(), BinaryReader.ReadByte(), 255);
-                    if (j == 255)
-                    {
-                        //Debug.LogError(mip.name + " color at 255:" + c);
-                        
-                        c.r = c.b = c.g = c.a = 0; 
-                    }
-                    //if (c.b == 255 && c.r == 0 && c.g == 0)
-                    //{
-                    //    c.a = 0;
-                    //    transparent = true;
-                    //    Debug.LogError(mip.name + " color index:" + j);
-                    //}
-
-                    colourPalette[j] = c;
-                }
-
-                if (mip.name.StartsWith("{"))
-                    transparent = true;
-
-                BinaryReader.BaseStream.Position = (textureOffset + mip.offset[0]);
-                int NumberOfPixels = mip.height * mip.width;
-                Color[] colour = new Color[NumberOfPixels];
-                for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
-                {
-                    var i = BinaryReader.ReadByte();
-                    colour[currentPixel] = colourPalette[i];
-                }
-                mip.texture = TextureManager.Texture2D(mip.width, mip.height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24/*,!transparent*/);
-                mip.texture.SetPixels(colour);
-//                if (transparent)
-//                    mip.texture.filterMode = FilterMode.Point;
-                mip.texture.Apply();
-            }
-        }
-
+       
 
 
 

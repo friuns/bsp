@@ -42,36 +42,40 @@ public class CombinedModel
     {
         // faces.array[faces.offset++] = face;
 
-        var offset = verts.offset;
+        var offset = verts.length;
         verts.Add(face.verts);
 
         int tristep = 1;
         for (int i = 1; i < face.numedges - 1; i++)
         {
             var i2 = i + offset;
-            tris.array[tris.offset + tristep - 1] = offset;
-            tris.array[tris.offset + tristep] = i2;
-            tris.array[tris.offset + tristep + 1] = i2 + 1;
+            tris.array[tris.length + tristep - 1] = offset;
+            tris.array[tris.length + tristep] = i2;
+            tris.array[tris.length + tristep + 1] = i2 + 1;
             tristep += 3;
         }
 
 
-        tris.offset += (face.numedges - 2) * 3;
+        tris.length += (face.numedges - 2) * 3;
 
 
         uvs.Add(face.uv);
         uvs2.Add(face.uv2);
         uvs3.Add(face.uv3);
 
+        transparent |= face.mip.transparent;
         if (!inited)
-            material = face.mainTex.format == TextureFormat.ARGB32 ? bsWeb._BspGenerateMapVis.matTrans : bsWeb._BspGenerateMapVis.mat;
+            mip = face.mip;
+        
         inited = true;
 
     }
+    private bool transparent;
+    public BSPMipTexture mip;
     private bool inited;
-    public Material material;   
     public Renderer GenerateMesh()
     {
+        if (vertsCount == 0) return null;
         mesh.name = name;
         mesh.vertices = verts.ToArray();
         mesh.SetIndices(tris.ToArray(), MeshTopology.Triangles, 0);
@@ -81,33 +85,27 @@ public class CombinedModel
         // AutoWeld.Weld(mesh,.1f,100);
         mesh.RecalculateNormals();
         // mesh.Optimize();
-        var g = new GameObject(this.name);
+        var g = new GameObject(name);
         
         g.AddComponent<MeshFilter>().mesh = mesh;
         g.transform.SetParent(bsWeb._BspGenerateMapVis.level, true);
         var renderer = g.AddComponent<MeshRenderer>();
-        renderer.material = material;
+        
+        var trigger = mip.hidden;
+        if (trigger)
+            renderer.sharedMaterials = new Material[0];
+        else
+            renderer.sharedMaterial =  transparent  ? bsWeb._BspGenerateMapVis.matTrans : bsWeb._BspGenerateMapVis.mat;
+        if(mip.disabled)
+            g.gameObject.SetActive(false);
+        
+        g.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
+        
+
         renderer.shadowCastingMode = ShadowCastingMode.Off;
         g.isStatic = true;
         
-    
-            
-        // else
-        // {
-        //     var trigger = hide.Any(a => string.Equals(name, a, StringComparison.OrdinalIgnoreCase));
-        //     if (trigger)
-        //         renderer.sharedMaterials = new Material[0];
-        //
-        //     if (!disableTexturesAndColliders)
-        //     {
-        //         Collider c = trigger ? g.AddComponent<BoxCollider>() : (Collider)g.AddComponent<MeshCollider>();
-        //         c.isTrigger = trigger;
-        //     }
-        //     
-        //     
-        //     g.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
-        // }
-            
+
         return renderer;
     }
     
