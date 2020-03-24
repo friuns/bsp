@@ -114,7 +114,7 @@ namespace bsp
                     }
                     
                 }
-                leafRoot.renderer = m.GenerateMesh();
+                leafRoot.renderer = m.GenerateMesh(false);
                 leafRoot.renderer.enabled = false;
                 // );
             }
@@ -128,25 +128,36 @@ namespace bsp
                 for (int j = 0; j < model.numberOfFaces; j += limit)
                 {
                     CombinedModel combined = new CombinedModel();
+                    CombinedModel combinedTrans = new CombinedModel();
 
                     var start = model.indexOfFirstFace+j;
                     var end = Mathf.Min(model.indexOfFirstFace + j + limit, model.indexOfFirstFace + model.numberOfFaces);
 
                     for (int i = start; i < end; i++)
                         if (!faces[i].mip.disabled)
-                            combined.PreAddFace(faces[i]);
+                            (faces[i].mip.transparent?combinedTrans:combined).PreAddFace(faces[i]);
                     combined.Init();
+                    combinedTrans.Init();
+                    
                     for (int i = start; i < end; i++)
                         if (!faces[i].mip.disabled)
-                            combined.AddFace(faces[i]);
-                    model.render = combined.GenerateMesh();
+                            (faces[i].mip.transparent?combinedTrans:combined).AddFace(faces[i]);
+
+                    if (combined.faceCount > 0)
+                        model.renders.Add(combined.GenerateMesh(false));
+                    if (combinedTrans.faceCount > 0)
+                        model.renders.Add(combinedTrans.GenerateMesh(true));
 
                     if (index == 0 && !settings.disablePvs)
-                        model.render.enabled = false;
+                        foreach(var a in model.renders)
+                            a.enabled = false;
 
-                    model.render.gameObject.AddComponent<MeshCollider>();
-                    model.render.gameObject.layer = Layer.level;
-                    model.render.gameObject.name = "Model:" + index;
+                    foreach (var a in model.renders)
+                    {
+                        a.gameObject.AddComponent<MeshCollider>();
+                        a.gameObject.layer = Layer.level;
+                        a.gameObject.name = "Model:" + index;
+                    }
 
                 }
             }
@@ -328,6 +339,7 @@ namespace bsp
                         bspFace.uv2[j] = new Vector2(bspFace.uv2[j].x * rects[i].width + rects[i].x, bspFace.uv2[j].y * rects[i].height + rects[i].y);
                 }
                 mat.SetTexture("_LightMap", Lightmap_tex);
+                matTrans.SetTexture("_LightMap", Lightmap_tex);
 
            
             }

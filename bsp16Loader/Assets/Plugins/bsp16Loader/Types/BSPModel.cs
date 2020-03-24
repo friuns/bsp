@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 414
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace bsp
         public Int32 indexOfFirstFace, numberOfFaces;// Index and count into faces lump
         public Bounds bounds = new Bounds();
         public Vector3 pos;
-        public Renderer render;
+        public List<Renderer> renders = new List<Renderer>();
         // public CombinedModel combined;
 
         public int node { get { return nodes[0]; } }

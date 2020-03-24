@@ -63,17 +63,17 @@ public class CombinedModel
         uvs2.Add(face.uv2);
         uvs3.Add(face.uv3);
 
-        transparent |= face.mip.transparent;
+        // transparent |= face.mip.transparent;
         if (!inited)
             mip = face.mip;
         
         inited = true;
 
     }
-    private bool transparent;
+    // private bool transparent;
     public BSPMipTexture mip;
     private bool inited;
-    public Renderer GenerateMesh()
+    public Renderer GenerateMesh(bool transparent)
     {
         if (vertsCount == 0) return null;
         mesh.name = name;
