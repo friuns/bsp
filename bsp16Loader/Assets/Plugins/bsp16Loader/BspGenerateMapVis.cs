@@ -240,14 +240,14 @@ namespace bsp
                 byte b = lightlump[tempCount + 2];
                 
                 
-                colourarray[k] = new Color32(Pow(r + 128), Pow(g+128), Pow(b+128), 255);
+                colourarray[k] = new Color32(Pow(r), Pow(g), Pow(b), 255);
 
                 tempCount += 3;
             }
 
             lightTex.SetPixels32(colourarray);
             lightTex.filterMode = FilterMode.Bilinear;
-            lightTex.wrapMode = TextureWrapMode.Clamp;
+            lightTex.wrapMode = TextureWrapMode.Repeat;
             lightTex.Apply();
 
 
@@ -261,6 +261,8 @@ namespace bsp
         }
         private byte Pow(int f)
         {
+            //return (byte)f;
+            f += 128;
             if (f > 255) return 255;
             // var g = f > 255 ? 255 : f;
             return (byte) (f * f / 255);
@@ -338,8 +340,8 @@ namespace bsp
                     for (int j = 0; j < bspFace.uv2.Length; j++)
                         bspFace.uv2[j] = new Vector2(bspFace.uv2[j].x * rects[i].width + rects[i].x, bspFace.uv2[j].y * rects[i].height + rects[i].y);
                 }
-                mat.SetTexture("_LightMap", Lightmap_tex);
-                matTrans.SetTexture("_LightMap", Lightmap_tex);
+                mat.SetTexture(Tag._LightMap, Lightmap_tex);
+                matTrans.SetTexture(Tag._LightMap, Lightmap_tex);
 
            
             }
