@@ -15,6 +15,8 @@ namespace bsp
         public override void Awake()
         {
             base.Awake();
+            mat = Instantiate(mat);
+            matTrans = Instantiate(matTrans);
             _BspGenerateMapVis = this;
         }
         //public Texture2D missingtexture;
