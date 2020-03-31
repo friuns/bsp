@@ -156,7 +156,12 @@ namespace bsp
 
                     foreach (var a in model.renders)
                     {
-                        a.gameObject.AddComponent<MeshCollider>();
+                        var c = a.gameObject.AddComponent<MeshCollider>();
+                        if (combined.mip?.hidden == true)
+                        {
+                            c.convex = true;
+                            c.isTrigger = true;
+                        }
                         a.gameObject.layer = Layer.level;
                         a.gameObject.name = "Model:" + index;
                     }
