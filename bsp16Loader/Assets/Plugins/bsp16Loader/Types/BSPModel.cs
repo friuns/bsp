@@ -39,6 +39,26 @@ namespace bsp
             bounds.size = new Vector3(Mathf.Abs(bounds.size.x), Mathf.Abs(bounds.size.y), Mathf.Abs(bounds.size.z));
             pos = bounds.min;
         }
+        // public List<BSPMipTexture> mips = new List<BSPMipTexture>(); 
+        public void Add(CombinedModel combined,bool trans)
+        {
+            // mips.AddRange(combined.mips2);
+            Renderer r = combined.GenerateMesh(trans);
+            renders.Add(r);
+
+            if (combined.mip.solid)
+            {
+                var c = r.gameObject.AddComponent<MeshCollider>();
+                if (combined.mip?.hidden == true)
+                {
+                    c.convex = true;
+                    c.isTrigger = true;
+                }
+            }
+            r.gameObject.layer = Layer.level;
+            r.gameObject.name = "Model:" + combined.name;
+            
+        }
     }
 }
 

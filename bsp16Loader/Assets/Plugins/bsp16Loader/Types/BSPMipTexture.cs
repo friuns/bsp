@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace bsp
 {
+[Serializable]
 public class BSPMipTexture
 {
     static string[] disable = new string[] {"sky"};
@@ -19,7 +21,8 @@ public class BSPMipTexture
     public bool disabled;
     public bool hidden;
     public bool transparent;
-    
+    public bool solid = true;
+    public float soldProb;
     public BSPMipTexture(string Name, UInt32 Width, UInt32 Height, UInt32[] offset)
     {
 
@@ -62,6 +65,24 @@ public class BSPMipTexture
             colour[currentPixel] = colourPalette[i];
         }
         texture = TextureManager.Texture2D(width, height, transparent ? TextureFormat.ARGB32 : TextureFormat.RGB24 /*,!transparent*/);
+
+        if (colour.Length > 20 && transparent)
+        {
+            int dd=0;
+            for (int i = 0; i < 10; i++)
+            {
+                int r = Random.Range(10, colour.Length - 10);
+                byte a = 0;
+                for (int j = -5; j < 5; j++)
+                {
+                    byte b = colour[r + j].a;
+                    a = b > a ? b : a;
+                }
+                dd += a;
+            }
+            solid = dd / 10f > 165;
+            soldProb = dd / 10f;
+        }
         texture.SetPixels32(colour);
 //                if (transparent)
 //                    texture.filterMode = FilterMode.Point;

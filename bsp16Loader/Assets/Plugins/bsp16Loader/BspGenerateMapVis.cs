@@ -48,9 +48,9 @@ namespace bsp
 
         private int BSPlookup(int node)
         {
-            
-            var b = planesLump[nodesLump[node].planeNum].plane.GetSide(CameraMainTransform.position / scale);
-            return nodesLump[node].children[b ? 1 : 0];
+            Plane plane = planesLump[nodesLump[node].planeNum].plane;
+            var side = plane.GetSide(CameraMainTransform.position / scale);
+            return nodesLump[node].children[side ? 1 : 0];
         }
         private int WalkBSP(int headnode = 0)
         {
@@ -146,32 +146,25 @@ namespace bsp
                             (faces[i].mip.transparent?combinedTrans:combined).AddFace(faces[i]);
 
                     if (combined.faceCount > 0)
-                        model.renders.Add(combined.GenerateMesh(false));
+                        model.Add(combined,false);
                     if (combinedTrans.faceCount > 0)
-                        model.renders.Add(combinedTrans.GenerateMesh(true));
+                        model.Add(combinedTrans, true);
 
                     if (index == 0 && !settings.disablePvs)
                         foreach(var a in model.renders)
                             a.enabled = false;
 
-                    foreach (var a in model.renders)
-                    {
-                        var c = a.gameObject.AddComponent<MeshCollider>();
-                        if (combined.mip?.hidden == true)
-                        {
-                            c.convex = true;
-                            c.isTrigger = true;
-                        }
-                        a.gameObject.layer = Layer.level;
-                        a.gameObject.name = "Model:" + index;
-                    }
+                    
 
                 }
             }
-   
-            if(!Application.isEditor)
+
+            if (!Application.isEditor)
+            {
                 foreach (var a in texturesLump)
                     DestroyImmediate(a.texture);
+                
+            }
 
         }
         public Material mat;
@@ -304,6 +297,7 @@ namespace bsp
                 
                 for (int i = 0; i < face.numedges; i++)
                     face.uv[i] = new Vector2((Vector3.Dot(face.verts[i], bspTexInfo.vec3s) + bspTexInfo.offs) / scales, (Vector3.Dot(face.verts[i], bspTexInfo.vec3t) + bspTexInfo.offt) / scalet);
+                
                 face.mip = mip;
                 face.mainTex = mip.texture;
                 

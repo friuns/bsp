@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -64,15 +65,11 @@ public class CombinedModel
         uvs3.Add(face.uv3);
 
         // transparent |= face.mip.transparent;
-        if (!inited)
+        if(mip==null||face.mip.solid)
             mip = face.mip;
-        
-        inited = true;
-
     }
     // private bool transparent;
     public BSPMipTexture mip;
-    private bool inited;
     public Renderer GenerateMesh(bool transparent)
     {
         if (vertsCount == 0) return null;

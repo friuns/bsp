@@ -185,6 +185,20 @@ namespace bsp
             var v = PropertyVector3Direct(name);
             return new Vector3(-v.x, v.z, -v.y);
         }
+        public Color32 PropertyColor32(string name)
+        {
+            string prop;
+            var c = new Color32(255, 255, 255, 255);
+            if (TryGetValue(name, out prop))
+            {
+                var d = prop.Split(' ');
+                for (int i = 0; i < d.Length; i++)
+                    c[i] = byte.Parse(d[i]);
+            }
+            return c;
+
+        }
+        
         public Color PropertyColor(string name)
         {
             string prop;

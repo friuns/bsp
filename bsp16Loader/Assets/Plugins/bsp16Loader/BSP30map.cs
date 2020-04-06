@@ -12,20 +12,21 @@ namespace bsp
     {
         private int NumTexLoadFromWad;
         private new BinaryReader br;
-        public BSPHeader header;
-        public EntityParser entityLump;
-        public BSPFace[] faces;
-        //public RendererCache[] renderers;
-        public BSPEdge[] edgesLump;
-        public int[] surfedgesLump;
+        internal BSPHeader header;
+        [NonSerialized]
+        public  EntityParser entityLump;
+        internal BSPFace[] faces;
+        internal BSPEdge[] edgesLump;
+        internal int[] surfedgesLump;
 
-        public byte[] lightlump;
-        public Vector3[] vertexesLump;
-        public dtexinfo_t[] texinfoLump;
-        public BSPMipTexture[] texturesLump;
-        public int[] markSurfaces;
-        public BSPPlane[] planesLump;
-        public BSPNode[] nodesLump;
+        internal byte[] lightlump;
+        internal Vector3[] vertexesLump;
+        internal dtexinfo_t[] texinfoLump;
+        internal BSPMipTexture[] texturesLump;
+        internal int[] markSurfaces;
+        internal BSPPlane[] planesLump;
+        internal BSPNode[] nodesLump;
+        [NonSerialized]
         public BSPModel[] models;
         
 
