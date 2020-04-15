@@ -69,13 +69,17 @@ public class BSPMipTexture
         if (colour.Length > 20 && transparent)
         {
             int dd=0;
-            for (int i = 0; i < 10; i++)
+            for (int x = 0; x < 10; x++)
             {
-                int r = Random.Range(10, colour.Length - 10);
+                var i = colour.Length / 10 * x;
+                if (Mathf.Abs((i + 5) % width) < 10)
+                    i += width / 2;
+                if (i + 30 > colour.Length) break;
+                
                 byte a = 0;
                 for (int j = -5; j < 5; j++)
                 {
-                    byte b = colour[r + j].a;
+                    byte b = colour[i + j].a;
                     a = b > a ? b : a;
                 }
                 dd += a;
