@@ -3,6 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public class ObjectBase
+{
+#if DEBUG
+    private string typeName;
+    public ObjectBase()
+    {
+        typeName = this.GetType().Name;
+        Base.objectCount++;
+        Base.m_typeDictionary[typeName]++;
+    }
+    ~ObjectBase()
+    {
+        Base.m_typeDictionary[typeName]--;
+        Base.objectCount--;
+    }
+#endif
+}
 namespace bsp
 {
     public class BSPFace
