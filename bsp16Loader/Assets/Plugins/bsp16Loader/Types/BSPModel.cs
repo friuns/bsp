@@ -7,7 +7,7 @@ using UnityEngine;
 namespace bsp
 {
     [Serializable]
-    public class BSPModel:ObjectBase
+    public class BSPModel
     {
         public Vector3 nMins;// Defines bounding box
         public Vector3 nMaxs;   // Defines bounding box       
