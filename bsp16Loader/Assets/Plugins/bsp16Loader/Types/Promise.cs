@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class Promise
 {
-    public static Promise<T> Start<T>(this T a,MonoBehaviour b, Func<T, T> act) where T : YieldInstruction 
+    public static Promise<T> StartPromice<T>(this T a,MonoBehaviour b, Func<T, T> act) where T : YieldInstruction 
     {
         return new Promise<T>() {a = act, mb = b, last = a};
     }
