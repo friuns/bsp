@@ -84,7 +84,7 @@ public class BSPMipTexture
                 }
                 dd += a;
             }
-            solid = dd / 10f > 165;
+            solid = dd / 10f > 200;
             soldProb = dd / 10f;
         }
         texture.SetPixels32(colour);
