@@ -305,10 +305,12 @@ namespace bsp
             // );
 
             {
-                var main_tex = new Texture2D(1, 1);
-                Rect[] rects = main_tex.PackTextures(faces.Select(a => a.mainTex).ToArray(), 1);
-                
-                
+                var main_tex = new Texture2D(1, 1,TextureFormat.RGB24,false);
+                var texture2Ds = faces.Select(a => a.mainTex).ToArray();
+                Rect[] rects = main_tex.PackTextures(texture2Ds, 1);
+                using (ProfilePrint("Repack textures"))
+                    main_tex = Repack(main_tex);
+
                 for (var i = 0; i < faces.Length; i++)
                 {
                     var face = faces[i];
@@ -317,6 +319,7 @@ namespace bsp
                     for (int j = 0; j < face.uv.Length; j++)
                         face.uv3[j] = new Vector4(rect.x, rect.y, rect.width, rect.height);
                 }
+                
                 // main_tex.Compress(true);
                 matTrans.mainTexture = mat.mainTexture = main_tex;
             }
@@ -341,15 +344,33 @@ namespace bsp
                     for (int j = 0; j < bspFace.uv2.Length; j++)
                         bspFace.uv2[j] = new Vector2(bspFace.uv2[j].x * rects[i].width + rects[i].x, bspFace.uv2[j].y * rects[i].height + rects[i].y);
                 }
+                using (ProfilePrint("Repack textures"))
+                    Lightmap_tex = Repack(Lightmap_tex);
+                
                 mat.SetTexture(Tag._LightMap, Lightmap_tex);
+                
+                
+                
                 matTrans.SetTexture(Tag._LightMap, Lightmap_tex);
 
            
             }
 
         }
-        
-        
+        private static Texture2D Repack(Texture2D main_tex)
+        {
+
+            var main_tex2 = TextureManager.Texture2D(main_tex.width, main_tex.height, TextureFormat.RGB24); 
+                // new Texture2D(main_tex.width, main_tex.height, TextureFormat.RGB24, false, true);
+            main_tex2.SetPixels32(main_tex.GetPixels32());
+            main_tex2.Apply(true);
+            main_tex2.Compress(false);
+            DestroyImmediate(main_tex);
+            main_tex = main_tex2;
+            return main_tex;
+        }
+
+
         [Obsolete]
         public new Renderer renderers;
         [Obsolete]

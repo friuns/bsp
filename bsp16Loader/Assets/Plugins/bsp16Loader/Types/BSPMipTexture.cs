@@ -64,7 +64,7 @@ public class BSPMipTexture
             var i = BinaryReader.ReadByte();
             colour[currentPixel] = colourPalette[i];
         }
-        texture = TextureManager.Texture2D(width, height, /*transparent ? TextureFormat.ARGB32 :*/ TextureFormat.RGB24 /*,!transparent*/);
+        texture = TextureManager.Texture2D(width, height, /*transparent ? TextureFormat.ARGB32 :*/ TextureFormat.RGB24 /*,!transparent*/,mipmap:false);
 
         if (colour.Length > 20 && transparent)
         {
@@ -91,6 +91,7 @@ public class BSPMipTexture
 //                if (transparent)
 //                    texture.filterMode = FilterMode.Point;
         texture.Apply();
+        // texture.Compress(false);
     }
     
     
