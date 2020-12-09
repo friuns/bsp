@@ -102,7 +102,7 @@ namespace bsp
         {
             TexInfoClass[] texinfo = new TexInfoClass[NumTexLoadFromWad];
             int IndexOfTexinfo = 0;
-            for (int j = 0; j < texturesLump.Length; j++)
+            for (int j = 0; j < texturesLump.Length && IndexOfTexinfo <texinfo.Length; j++)
             {
                 if (texturesLump[j].texture == null)
                 {
