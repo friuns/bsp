@@ -85,18 +85,18 @@ public class CombinedModel
         var g = new GameObject(name);
         
         g.AddComponent<MeshFilter>().mesh = mesh;
-        g.transform.SetParent(bsWeb._BspGenerateMapVis.level, true);
+        g.transform.SetParent(Base._BspGenerateMapVis.level, true);
         var renderer = g.AddComponent<MeshRenderer>();
         
         var trigger = mip.hidden;
         if (trigger)
             renderer.sharedMaterials = new Material[0];
         else
-            renderer.sharedMaterial =  transparent  ? bsWeb._BspGenerateMapVis.matTrans : bsWeb._BspGenerateMapVis.mat;
+            renderer.sharedMaterial =  transparent  ? Base._BspGenerateMapVis.matTrans : Base._BspGenerateMapVis.mat;
         if(mip.disabled)
             g.gameObject.SetActive(false);
         
-        g.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
+        // g.layer = /*transparent?Layer.ignoreRayCast:*/ trigger?Layer.trigger: Layer.level;
         
 
         renderer.shadowCastingMode = ShadowCastingMode.Off;

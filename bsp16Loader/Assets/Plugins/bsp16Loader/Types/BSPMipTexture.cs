@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -58,13 +59,13 @@ public class BSPMipTexture
         BinaryReader.BaseStream.Position = (textureOffset + offset[0]);
         int NumberOfPixels = height * width;
 
-        Color32[] colour = TempArray<Color32>.GetArray(NumberOfPixels, 1);
+        Color32[] colour = new Color32[NumberOfPixels];
         for (int currentPixel = 0; currentPixel < NumberOfPixels; currentPixel++)
         {
             var i = BinaryReader.ReadByte();
             colour[currentPixel] = colourPalette[i];
         }
-        texture = TextureManager.Texture2D(width, height, /*transparent ? TextureFormat.ARGB32 :*/ TextureFormat.RGB24 /*,!transparent*/,mipmap:false);
+        texture = new Texture2D(width, height, /*transparent ? TextureFormat.ARGB32 :*/ TextureFormat.RGB24 /*,!transparent*/,false);
 
         if (colour.Length > 20 && transparent)
         {

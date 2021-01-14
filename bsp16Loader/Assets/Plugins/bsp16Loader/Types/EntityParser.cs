@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using ExitGames.Client.Photon;
+// using ExitGames.Client.Photon;
 using UnityEngine;
 
 namespace bsp

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 namespace bsp
 {
-    public partial class BSP30Map : Base
+public partial class BSP30Map : Base
     {
         private int NumTexLoadFromWad;
         private new BinaryReader br;
@@ -88,6 +88,7 @@ namespace bsp
                 }
 
         }
+        
 
 
         private void ReadNodes()
@@ -199,7 +200,7 @@ namespace bsp
         private IEnumerator LoadTextureFromWad(string WadFileName, TexInfoClass[] TexturesToLoad)
         {
             MemoryStream ms = null;
-            yield return CustomCorontinue(loadWad(WadFileName, a => ms = a), null, Throw: false);
+            yield return loadWad(WadFileName, a => ms = a);
             if (ms == null) yield break;
             using (ProfilePrint("ReadWad"))
             using (BinaryReader wadStream = new BinaryReader(ms))

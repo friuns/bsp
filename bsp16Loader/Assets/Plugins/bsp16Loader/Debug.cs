@@ -1,4 +1,4 @@
-using RuntimeDebugDraw;
+// using RuntimeDebugDraw;
 
 namespace bsp
 {
@@ -7,7 +7,7 @@ namespace bsp
         private class Debug
         {
             public static bool debug = false;
-            [Conditional(Tag.logging)]
+            // [Conditional(Tag.logging)]
             public static void Log2(object text)
             {
                 if (debug)
@@ -21,7 +21,7 @@ namespace bsp
                 //    UnityEngine.Debug.Log(P0);
 
             }
-            [Conditional(Tag.logging)]
+            // [Conditional(Tag.logging)]
             public static void Log(object text)
             {
                 //if (debug)

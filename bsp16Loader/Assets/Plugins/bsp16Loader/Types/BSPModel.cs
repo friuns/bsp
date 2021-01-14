@@ -55,7 +55,7 @@ namespace bsp
                     c.isTrigger = true;
                 }
             }
-            r.gameObject.layer = Layer.level;
+            // r.gameObject.layer = Layer.level;
             r.gameObject.name = "Model:" + combined.name;
             
         }

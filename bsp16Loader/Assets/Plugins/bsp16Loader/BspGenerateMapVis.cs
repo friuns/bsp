@@ -6,18 +6,18 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Rendering;
+using Object = UnityEngine.Object;
 using Random = System.Random;
 
 namespace bsp
 {
     public class BspGenerateMapVis : BSP30Map
     {
-        public override void Awake()
+        public void Awake()
         {
-            base.Awake();
-            mat = Instantiate(mat);
-            matTrans = Instantiate(matTrans);
-            _BspGenerateMapVis = this;
+            mat = Object.Instantiate(mat);
+            matTrans = Object.Instantiate(matTrans);
+            // _BspGenerateMapVis = this;
         }
         //public Texture2D missingtexture;
         
@@ -42,14 +42,14 @@ namespace bsp
 
         }
         //bool loaded;
-        public const float scale = Math2.itchToM;
+        public const float scale = 0.0254f;
   
         
 
         private int BSPlookup(int node)
         {
             Plane plane = planesLump[nodesLump[node].planeNum].plane;
-            var side = plane.GetSide(CameraMainTransform.position / scale);
+            var side = plane.GetSide(Camera.main.transform.position / scale);
             return nodesLump[node].children[side ? 1 : 0];
         }
         private int WalkBSP(int headnode = 0)
@@ -226,8 +226,8 @@ namespace bsp
             }
 
 
-            Texture2D lightTex = TextureManager.Texture2D(lightW, lightH, TextureFormat.RGB24, false);
-            Color32[] colourarray = TempArray<Color32>.GetArray(lightW * lightH, 1);
+            Texture2D lightTex = new Texture2D(lightW, lightH, TextureFormat.RGB24, false);
+            Color32[] colourarray =  new Color32[lightW * lightH];
             int tempCount = (int)face.lightmapOffset;
 
             for (int k = 0; k < lightW * lightH; k++)
@@ -347,11 +347,11 @@ namespace bsp
                 using (ProfilePrint("Repack textures"))
                     Lightmap_tex = Repack(Lightmap_tex);
                 
-                mat.SetTexture(Tag._LightMap, Lightmap_tex);
+                mat.SetTexture("_LightMap", Lightmap_tex);
                 
                 
                 
-                matTrans.SetTexture(Tag._LightMap, Lightmap_tex);
+                matTrans.SetTexture("_LightMap", Lightmap_tex);
 
            
             }
@@ -360,7 +360,7 @@ namespace bsp
         private static Texture2D Repack(Texture2D main_tex)
         {
 
-            var main_tex2 = TextureManager.Texture2D(main_tex.width, main_tex.height, TextureFormat.RGB24); 
+            var main_tex2 = new Texture2D(main_tex.width, main_tex.height, TextureFormat.RGB24,true); 
                 // new Texture2D(main_tex.width, main_tex.height, TextureFormat.RGB24, false, true);
             main_tex2.SetPixels32(main_tex.GetPixels32());
             main_tex2.Apply(true);
